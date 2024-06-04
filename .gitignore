@@ -1,0 +1,7 @@
+**/settings/Mainnet.toml
+**/settings/Testnet.toml
+.requirements/
+history.txt
+.cache
+.DS_Store
+.DStore

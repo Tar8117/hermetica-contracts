@@ -1,0 +1,99 @@
+[project]
+name = 'hermetica-usdh-contracts'
+description = 'A Bitcoin-backed synthetic dollar protocol'
+authors = []
+telemetry = false
+cache_dir = '.cache'
+
+# protocol
+
+[contracts.reserve]
+path = 'contracts/protocol/reserve-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.controller]
+path = 'contracts/protocol/controller-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.hq]
+path = 'contracts/protocol/hq-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.insurance-fund]
+path = 'contracts/protocol/insurance-fund-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.minting-otc]
+path = 'contracts/protocol/minting-otc-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.minting]
+path = 'contracts/protocol/minting-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.redeeming-reserve]
+path = 'contracts/protocol/redeeming-reserve-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sip-010-trait]
+path = 'contracts/traits/sip-010-trait.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.staking]
+path = 'contracts/protocol/staking-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.staking-silo]
+path = 'contracts/protocol/staking-silo-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.staking-reserve]
+path = 'contracts/protocol/staking-reserve-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.blacklist-susdh]
+path = 'contracts/protocol/blacklist-susdh-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.recover]
+path = 'contracts/protocol/recover-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+# tokens
+
+[contracts.susdh-token]
+path = 'contracts/tokens/susdh-token-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.usdh-token]
+path = 'contracts/tokens/usdh-token-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+# pyth
+
+[[project.requirements]]
+contract_id = 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2'
+
+[[project.requirements]]
+contract_id = 'SP2J933XB2CP2JQ1A4FGN8JA968BBG3NK3EKZ7Q9F.hk-cursor-v2'
+
+[[project.requirements]]
+contract_id = 'SP2J933XB2CP2JQ1A4FGN8JA968BBG3NK3EKZ7Q9F.hk-ecc-v1'
+
+[[project.requirements]]
+contract_id = 'SP2J933XB2CP2JQ1A4FGN8JA968BBG3NK3EKZ7Q9F.hk-merkle-tree-keccak160-v1'
