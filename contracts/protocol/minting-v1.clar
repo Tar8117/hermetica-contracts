@@ -513,7 +513,7 @@
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
     (asserts! (is-eq redeeming-asset-contract (contract-of redeeming-asset)) ERR_ASSET_MISMATCH)
     (asserts! (is-eq amount-usdh amount-usdh-requested) ERR_AMOUNT_MISMATCH)
-    (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
+    (asserts! (<= price (+ price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
     (try! (contract-call? .redeeming-reserve transfer amount-asset-confirmed (get requester redeem-request) redeeming-asset))
     (try! (as-contract (contract-call? .usdh-token burn-for-protocol (- amount-usdh amount-usdh-commission) tx-sender)))
