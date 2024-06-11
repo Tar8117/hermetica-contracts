@@ -206,7 +206,7 @@
     (asserts! (var-get mint-enabled) ERR_TRADING_DISABLED)
     (asserts! (get minter (get-trader tx-sender)) ERR_NOT_ALLOWED)
 
-    (if (> burn-block-height (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
+    (if (>= burn-block-height (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
       (begin
         (var-set current-mint-limit (get-mint-limit))
         (var-set last-mint-limit-reset burn-block-height) 
