@@ -328,6 +328,7 @@
     (asserts! (> timestamp (get-last-oracle-timestamp)) ERR_STALE_DATA)
     (asserts! (is-eq oracle-price-feed-id minting-asset-price-feed-id) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
     
     (try! (contract-call? minting-asset transfer amount-asset tx-sender minting-contract none))
     
@@ -401,6 +402,7 @@
     (asserts! (> timestamp (var-get last-oracle-timestamp)) ERR_STALE_DATA)
     (asserts! (is-eq oracle-price-feed-id redeeming-asset-price-feed-id) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
     
     (try! (contract-call? .usdh-token transfer amount-usdh tx-sender minting-contract none))
     
