@@ -367,7 +367,7 @@
     
     (try! (as-contract (contract-call? minting-asset-entry transfer (get amount-asset mint-request) tx-sender requester none)))
     (map-delete mint-requests { request-id: (get request-id entry)})
-    (if (<= new-mint-limit (get-mint-limit)) (var-set current-mint-limit new-mint-limit) true)
+    (if (<= new-mint-limit (get-mint-limit)) (var-set current-mint-limit new-mint-limit) (var-set current-mint-limit (get-mint-limit)))
     (ok true)
   )
 )
@@ -496,7 +496,7 @@
 
     (try! (as-contract (contract-call? minting-asset-entry transfer amount-asset-requested tx-sender requester none)))
     (map-delete mint-requests { request-id: (get request-id entry) })
-    (if (<= new-mint-limit (get-mint-limit)) (var-set current-mint-limit new-mint-limit) true)
+    (if (<= new-mint-limit (get-mint-limit)) (var-set current-mint-limit new-mint-limit) (var-set current-mint-limit (get-mint-limit)))
     (ok true)
   )
 )
