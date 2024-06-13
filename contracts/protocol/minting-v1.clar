@@ -317,7 +317,7 @@
     (asserts! (get-mint-enabled) ERR_TRADING_DISABLED)
     (if (get-whitelist-enabled) (asserts! (get minter (get-whitelist tx-sender)) ERR_NOT_ALLOWED) true)
     (asserts! (check-is-supported-asset minting-asset-contract) ERR_NOT_SUPPORTED_ASSET)
-    (if (> timestamp (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
+    (if (>= timestamp (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window)))
       (begin
         (var-set current-mint-limit (get-mint-limit))
         (var-set last-mint-limit-reset timestamp) 
