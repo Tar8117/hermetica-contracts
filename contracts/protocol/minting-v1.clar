@@ -88,7 +88,6 @@
     minting-asset: principal,
     amount-asset: uint,           ;; BTC; token-base
     price: uint,                  ;; BTCUSD; oracle-base
-    amount-usdh-requested: uint,  ;; USDh; usdh-base
     slippage: uint,               ;; bps
     block-height: uint,           ;; burn-block-height
   }
@@ -103,7 +102,6 @@
     redeeming-asset: principal,
     amount-usdh: uint,            ;; USDh; usdh-base
     price: uint,                  ;; BTCUSD; oracle-base
-    amount-asset-requested: uint, ;; BTC; token-base
     slippage: uint,               ;; bps
     block-height: uint,           ;; burn-block-height
   }
@@ -337,7 +335,6 @@
         minting-asset: minting-asset-contract,
         amount-asset: amount-asset,                     ;; BTC; token-base
         price: price,                                   ;; BTCUSD; oracle-base
-        amount-usdh-requested: amount-usdh-requested,   ;; USDh; usdh-base
         slippage: slippage,                             ;; bps
         block-height: burn-block-height,
       }
@@ -410,7 +407,6 @@
         redeeming-asset: redeeming-asset-contract,
         amount-usdh: amount-usdh,                       ;; USDh; usdh-base
         price: price,                                   ;; BTCUSD; oracle-base
-        amount-asset-requested: amount-asset-requested, ;; BTC; token-base
         slippage: slippage,                             ;; bps
         block-height: burn-block-height,
       }
@@ -446,7 +442,6 @@
   (let (
     (mint-request (try! (get-mint-request request-id)))
     (price-requested (get price mint-request))
-    (amount-requested (get amount-asset mint-request))
     (minting-asset-contract (get minting-asset mint-request))
     (slippage-tolerance (/ (* price-requested (get slippage mint-request)) bps-base))
     (token-base (get token-base (try! (get-supported-asset (contract-of minting-asset)))))
@@ -460,7 +455,7 @@
     (asserts! (get minter (get-trader tx-sender)) ERR_NOT_ALLOWED)
     (asserts! (get-custody-address-active custody-address) ERR_NOT_CUSTODY_ADDRESS)
     (asserts! (is-eq minting-asset-contract (contract-of minting-asset)) ERR_ASSET_MISMATCH)
-    (asserts! (is-eq amount-asset amount-requested) ERR_AMOUNT_MISMATCH)
+    (asserts! (is-eq amount-asset (get amount-asset mint-request)) ERR_AMOUNT_MISMATCH)
     (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
     (try! (contract-call? .usdh-token mint-for-protocol amount-usdh-confirmed (get requester mint-request)))
