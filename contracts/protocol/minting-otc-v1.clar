@@ -152,7 +152,6 @@
 (define-public (request-redeem (btc-address (string-ascii 64)) (amount-usdh uint) (price uint) (slippage uint))
   (let (
     (next-redeem-id (+ (get-current-redeem-id) u1))
-    (amount-asset-requested (/ (* amount-usdh oracle-base (pow u10 u8)) price usdh-base))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
@@ -166,7 +165,7 @@
         btc-address: btc-address,
         amount-usdh: amount-usdh,                       ;; USDh
         price: price,                                   ;; BTCUSD
-        amount-asset-requested: amount-asset-requested, ;; BTC; token-base
+        amount-asset-requested: (/ (* amount-usdh oracle-base (pow u10 u8)) price usdh-base), ;; BTC; token-base
         slippage: slippage,                             ;; bps
         block-height: burn-block-height,
       }
@@ -228,9 +227,6 @@
   (let (
     (redeem-request (try! (get-redeem-request request-id)))
     (price-requested (get price redeem-request))
-    (amount-usdh-requested (get amount-usdh redeem-request))
-    (btc-address (get btc-address redeem-request))
-    (requester (get requester redeem-request))
     (slippage-tolerance (/ (* price-requested (get slippage redeem-request)) bps-base))
     (amount-usdh-commission (/ (* amount-usdh (var-get redeem-commission-usdh)) bps-base))
     (amount-usdh-confirmed (- amount-usdh amount-usdh-commission))
@@ -239,10 +235,10 @@
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
-    (asserts! (is-eq amount-usdh amount-usdh-requested) ERR_AMOUNT_MISMATCH)
+    (asserts! (is-eq amount-usdh (get amount-usdh redeem-request)) ERR_AMOUNT_MISMATCH)
     (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
-    (print { request-id: request-id, price: price, amount-usdh: amount-usdh, amount-usdh-confirmed: amount-usdh-confirmed, amount-asset-confirmed: amount-asset-confirmed, btc-address: btc-address })
+    (print { request-id: request-id, price: price, amount-usdh: amount-usdh, amount-usdh-confirmed: amount-usdh-confirmed, amount-asset-confirmed: amount-asset-confirmed, btc-address: (get btc-address redeem-request) })
     (try! (as-contract (contract-call? .usdh-token burn-for-protocol amount-usdh-confirmed tx-sender)))
     (if (> amount-usdh-commission u0) (try! (as-contract (contract-call? .usdh-token transfer amount-usdh-commission tx-sender .reserve none))) true)
 
@@ -257,14 +253,12 @@
 (define-public (cancel-redeem-request (request-id uint))
   (let (
     (redeem-request (try! (get-redeem-request request-id)))
-    (amount-usdh-requested (get amount-usdh redeem-request))
-    (requester (get requester redeem-request))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
 
-    (try! (as-contract (contract-call? .usdh-token transfer amount-usdh-requested tx-sender requester none)))
+    (try! (as-contract (contract-call? .usdh-token transfer (get amount-usdh redeem-request) tx-sender (get requester redeem-request) none)))
     (map-delete redeem-requests { request-id: request-id })
     (ok true)
   )
