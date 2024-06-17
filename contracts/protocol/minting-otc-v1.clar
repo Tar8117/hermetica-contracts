@@ -71,7 +71,6 @@
     btc-address: (string-ascii 64),
     amount-usdh: uint,            ;; USDh; usdh-base
     price: uint,                  ;; BTCUSD; oracle-base
-    amount-asset-requested: uint, ;; BTC; token-base
     slippage: uint,               ;; bps
     block-height: uint,           ;; burn-block-height
   }
@@ -165,7 +164,6 @@
         btc-address: btc-address,
         amount-usdh: amount-usdh,                       ;; USDh
         price: price,                                   ;; BTCUSD
-        amount-asset-requested: (/ (* amount-usdh oracle-base (pow u10 u8)) price usdh-base), ;; BTC; token-base
         slippage: slippage,                             ;; bps
         block-height: burn-block-height,
       }
