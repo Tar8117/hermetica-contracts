@@ -23,19 +23,39 @@
 (define-data-var contracts-enabled bool true)
 (define-data-var minting-enabled bool true)
 
+(define-data-var owner 
+  {
+    address: principal,
+  } 
+  {
+    address: tx-sender,
+  }
+)
+
+(define-data-var next-owner 
+  {
+    address: principal,
+    block-height: uint
+  }
+  {
+    address: tx-sender,
+    block-height: burn-block-height
+  }
+ )
+
 ;;-------------------------------------
 ;; Maps 
 ;;-------------------------------------
 
-(define-map owners
-  { 
-    address: principal 
-  }
-  {
-    active: bool,
-    block-height: (optional uint)
-  }
-)
+;; (define-map owners
+;;   { 
+;;     address: principal 
+;;   }
+;;   {
+;;     active: bool,
+;;     block-height: (optional uint)
+;;   }
+;; )
 
 (define-map admins
   { 
@@ -43,6 +63,7 @@
   }
   {
     active: bool,
+    block-height: (optional uint)
   }
 )
 
@@ -85,19 +106,18 @@
   (var-get minting-enabled)
 )
 
-(define-read-only (get-owner (address principal))
-  (default-to 
-    { active: false, block-height: none }
-    (map-get? owners { address: address })
-  )
+(define-read-only (get-owner)
+  (get address (var-get owner))
+)
+
+(define-read-only (get-next-owner)
+  (var-get next-owner)
 )
 
 (define-read-only (get-admin (address principal))
-  (get active 
-    (default-to 
-      { active: false }
-      (map-get? admins { address: address })
-    )
+  (default-to 
+    { active: false, block-height: none }
+    (map-get? admins { address: address })
   )
 )
 
@@ -139,14 +159,14 @@
 
 (define-public (check-is-owner (contract principal))
   (begin
-    (asserts! (get active (get-owner contract)) ERR_NOT_OWNER)
+    (asserts! (is-eq contract (get-owner)) ERR_NOT_OWNER)
     (ok true)
   )
 )
 
 (define-public (check-is-admin (contract principal))
   (begin
-    (asserts! (get-admin contract) ERR_NOT_ADMIN)
+    (asserts! (get active (get-admin contract)) ERR_NOT_ADMIN)
     (ok true)
   )
 )
@@ -212,35 +232,44 @@
 (define-public (request-owner-update (address principal))
   (begin
     (try! (check-is-owner tx-sender))
-    (map-set owners { address: address } { active: false, block-height: (some burn-block-height) })
+    (var-set next-owner { address: address, block-height: burn-block-height })
     (ok true)
   )
 )
 
-(define-public (remove-owner (address principal))
+(define-public (activate-next-owner) 
   (begin
     (try! (check-is-owner tx-sender))
-    (map-delete owners { address: address })
+    (asserts! (>= burn-block-height (+ (get block-height (get-next-owner)) activation-delay)) ERR_ACTIVATION)
+    (var-set owner {address: (get address (get-next-owner))})
     (ok true)
   )
 )
 
-(define-public (activate-owner (address principal))
+(define-public (request-admin-update (address principal))
+  (begin
+    (try! (check-is-owner tx-sender))
+    (map-set admins { address: address } { active: false, block-height: (some burn-block-height) })
+    (ok true)
+  )
+)
+
+(define-public (remove-admin (address principal))
+  (begin
+    (try! (check-is-owner tx-sender))
+    (map-delete admins { address: address })
+    (ok true)
+  )
+)
+
+(define-public (activate-admin (address principal))
   (let (
-    (owner-entry (get-owner address))
-    (owner-block-height (unwrap! (get block-height owner-entry) ERR_NO_ENTRY))
+    (admin-entry (get-admin address))
+    (admin-block-height (unwrap! (get block-height admin-entry) ERR_NO_ENTRY))
   )
     (try! (check-is-owner tx-sender))
-    (asserts! (>= burn-block-height (+ owner-block-height activation-delay)) ERR_ACTIVATION)
-    (map-set owners { address: address } (merge owner-entry { active: true }))
-    (ok true)
-  )
-)
-
-(define-public (set-admin (address principal) (active bool))
-  (begin
-    (try! (check-is-admin tx-sender))
-    (map-set admins { address: address } { active: active })
+    (asserts! (>= burn-block-height (+ admin-block-height activation-delay)) ERR_ACTIVATION)
+    (map-set admins { address: address } (merge admin-entry { active: true }))
     (ok true)
   )
 )
@@ -293,8 +322,7 @@
 ;; Init 
 ;;-------------------------------------
 
-(map-set owners { address: tx-sender } { active: true, block-height: (some block-height) })
-(map-set admins { address: tx-sender } { active: true })
+(map-set admins { address: tx-sender } { active: true, block-height: none })
 (map-set guardians { address: tx-sender } { active: true })
 (map-set minting-contracts { address: .minting } { active: true, block-height: (some block-height) })
 (map-set minting-contracts { address: .minting-otc } { active: true, block-height: (some block-height) })
