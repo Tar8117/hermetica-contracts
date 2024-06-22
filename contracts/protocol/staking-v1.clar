@@ -72,6 +72,6 @@
 ;; init
 
 (begin 
-  (try! (as-contract (contract-call? .susdh-token mint-for-protocol usdh-base tx-sender)))
+  (try! (contract-call? .susdh-token mint-for-protocol usdh-base .staking))
   (try! (contract-call? .usdh-token mint-for-protocol usdh-base .staking-reserve))
 )
