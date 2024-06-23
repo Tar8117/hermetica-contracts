@@ -69,7 +69,9 @@
   )
 )
 
-;; init
+;;-------------------------------------
+;; Init  
+;;-------------------------------------
 
 (begin 
   (try! (contract-call? .susdh-token mint-for-protocol usdh-base .staking))
