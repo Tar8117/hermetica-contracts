@@ -257,7 +257,7 @@
     (admin-entry (get-admin address))
     (admin-burn-block-height (unwrap! (get burn-block-height admin-entry) ERR_NO_ENTRY))
   )
-    (try! (check-is-owner tx-sender))
+    (asserts! (or (is-eq tx-sender (get-owner)) (is-eq address tx-sender)) ERR_NOT_OWNER)
     (asserts! (>= burn-block-height (+ admin-burn-block-height activation-delay)) ERR_ACTIVATION)
     (map-set admins { address: address } (merge admin-entry { active: true }))
     (ok true)
