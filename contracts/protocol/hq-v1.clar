@@ -53,7 +53,7 @@
   }
   {
     active: bool,
-    burn-lock-height: (optional uint)
+    burn-block-height: (optional uint)
   }
 )
 
