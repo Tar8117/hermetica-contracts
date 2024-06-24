@@ -478,6 +478,7 @@
   (let (
     (mint-request (try! (get-mint-request (get request-id entry))))
     (minting-asset-entry (get minting-asset entry))
+    (token-base (get token-base (try! (get-supported-asset (contract-of minting-asset-entry)))))
     (price (get price mint-request))
     (amount-asset (get amount-asset mint-request))
     (amount-usdh-requested (/ (* amount-asset price usdh-base) oracle-base token-base))
