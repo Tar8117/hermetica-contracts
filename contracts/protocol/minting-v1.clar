@@ -59,6 +59,7 @@
 (define-data-var mint-limit-reset-window uint u3600)              ;; 1 day in seconds
 (define-data-var last-mint-limit-reset uint u0)                   ;; timestamp (in s)
 (define-data-var timestamper principal tx-sender)                 ;; update last-mint-reset-reset
+(define-data-var min-amount-usdh-requested uint (* u1000 usdh-base))     ;; in USD 
 
 (define-data-var mint-commission-usdh uint u10)                   ;; bps
 (define-data-var redeem-commission-usdh uint u10)                 ;; bps
@@ -214,6 +215,10 @@
   (var-get redeem-commission-asset)
 )
 
+(define-read-only (get-min-amount-usdh-requested) 
+  (var-get min-amount-usdh-requested)
+)
+
 (define-read-only (get-timestamper) 
   (var-get timestamper)
 )
@@ -313,7 +318,7 @@
     (asserts! (get-mint-enabled) ERR_TRADING_DISABLED)
     (if (get-whitelist-enabled) (asserts! (get minter (get-whitelist tx-sender)) ERR_NOT_ALLOWED) true)
     (asserts! (check-is-supported-asset minting-asset-contract) ERR_NOT_SUPPORTED_ASSET)
-    (if (> timestamp (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
+    (if (>= timestamp (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window)))
       (begin
         (var-set current-mint-limit (get-mint-limit))
         (var-set last-mint-limit-reset timestamp) 
@@ -324,6 +329,8 @@
     (asserts! (> timestamp (get-last-oracle-timestamp)) ERR_STALE_DATA)
     (asserts! (is-eq oracle-price-feed-id (get price-feed-id (try! (get-supported-asset minting-asset-contract)))) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
+    (asserts! (>= amount-usdh-requested (get-min-amount-usdh-requested)) ERR_BELOW_MIN)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
     
     (try! (contract-call? minting-asset transfer amount-asset tx-sender minting-contract none))
     
@@ -392,6 +399,8 @@
     (asserts! (> timestamp (var-get last-oracle-timestamp)) ERR_STALE_DATA)
     (asserts! (is-eq oracle-price-feed-id (get price-feed-id (try! (get-supported-asset redeeming-asset-contract)))) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
+    (asserts! (>= amount-usdh (get-min-amount-usdh-requested)) ERR_BELOW_MIN)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
     
     (try! (contract-call? .usdh-token transfer amount-usdh tx-sender minting-contract none))
     
@@ -447,6 +456,7 @@
     (asserts! (var-get mint-enabled) ERR_TRADING_DISABLED)
     (asserts! (get minter (get-trader tx-sender)) ERR_NOT_ALLOWED)
     (asserts! (get-custody-address-active custody-address) ERR_NOT_CUSTODY_ADDRESS)
+    (asserts! (check-is-supported-asset minting-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (is-eq minting-asset-contract (contract-of minting-asset)) ERR_ASSET_MISMATCH)
     (asserts! (is-eq amount-asset (get amount-asset mint-request)) ERR_AMOUNT_MISMATCH)
     (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
@@ -495,9 +505,10 @@
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
+    (asserts! (check-is-supported-asset redeeming-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (is-eq redeeming-asset-contract (contract-of redeeming-asset)) ERR_ASSET_MISMATCH)
     (asserts! (is-eq amount-usdh (get amount-usdh redeem-request)) ERR_AMOUNT_MISMATCH)
-    (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
+    (asserts! (<= price (+ price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
     (try! (contract-call? .redeeming-reserve transfer amount-asset-confirmed (get requester redeem-request) redeeming-asset))
     (try! (as-contract (contract-call? .usdh-token burn-for-protocol (- amount-usdh amount-usdh-commission) tx-sender)))
@@ -572,11 +583,13 @@
   )
 )
 
-(define-public (set-mint-limit (new-limit uint))
-  (begin
+(define-public (set-mint-limit (new-mint-limit uint))
+  (let (
+    (new-mint-limit-usdh-base (* new-mint-limit usdh-base))
+  )
     (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-limit max-mint-limit) ERR_ABOVE_MAX)
-    (ok (var-set mint-limit new-limit)))
+    (asserts! (<= new-mint-limit-usdh-base max-mint-limit) ERR_ABOVE_MAX)
+    (ok (var-set mint-limit new-mint-limit-usdh-base)))
 )
 
 (define-public (set-mint-limit-reset-window (new-window uint))
@@ -612,6 +625,15 @@
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-redeem-commission-asset max-commission) ERR_ABOVE_MAX)
     (ok (var-set redeem-commission-asset new-redeem-commission-asset)))
+)
+
+(define-public (set-min-amount-usdh-requested (new-min-amount-usdh-requested uint))
+  (let (
+    (new-min-amount-usdh-requested-usdh-base (* new-min-amount-usdh-requested usdh-base))
+  )
+    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (ok (var-set min-amount-usdh-requested new-min-amount-usdh-requested-usdh-base))
+  )
 )
 
 (define-public (set-trader (address principal) (mint bool) (redeem bool))
@@ -661,8 +683,9 @@
     (timestamp (unwrap-panic (get publish-time decoded-price)))
   )
     (asserts! (is-eq tx-sender (var-get timestamper)) ERR_NOT_ALLOWED)
-    (asserts! (> timestamp (get-last-mint-limit-reset)) ERR_STALE_DATA)
+    (asserts! (> timestamp (var-get last-oracle-timestamp)) ERR_STALE_DATA)
     (var-set last-mint-limit-reset timestamp)
+    (var-set last-oracle-timestamp timestamp)
     (ok true)
   )
 )

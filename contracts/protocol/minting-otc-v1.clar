@@ -45,7 +45,6 @@
 
 (define-data-var mint-commission-usdh uint u10)                 ;; bps
 (define-data-var redeem-commission-usdh uint u10)               ;; bps
-(define-data-var mint-commission-asset uint u10)                ;; bps
 (define-data-var redeem-commission-asset uint u10)              ;; bps
 
 ;;-------------------------------------
@@ -124,10 +123,6 @@
   (var-get redeem-commission-usdh)
 )
 
-(define-read-only (get-mint-commission-asset) 
-  (var-get mint-commission-asset)
-)
-
 (define-read-only (get-redeem-commission-asset) 
   (var-get redeem-commission-asset)
 )
@@ -155,6 +150,7 @@
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (>= amount-usdh (get-min-redeem-amount)) ERR_BELOW_MIN)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
 
     (try! (contract-call? .usdh-token transfer amount-usdh tx-sender minting-contract none))
 
@@ -203,7 +199,7 @@
     (asserts! (var-get mint-enabled) ERR_TRADING_DISABLED)
     (asserts! (get minter (get-trader tx-sender)) ERR_NOT_ALLOWED)
 
-    (if (> burn-block-height (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
+    (if (>= burn-block-height (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
       (begin
         (var-set current-mint-limit (get-mint-limit))
         (var-set last-mint-limit-reset burn-block-height) 
@@ -323,13 +319,6 @@
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-redeem-commission-usdh max-commission) ERR_ABOVE_MAX)
     (ok (var-set redeem-commission-usdh new-redeem-commission-usdh)))
-)
-
-(define-public (set-mint-commission-asset (new-mint-commission-asset uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-mint-commission-asset max-commission) ERR_ABOVE_MAX)
-    (ok (var-set mint-commission-asset new-mint-commission-asset)))
 )
 
 (define-public (set-redeem-commission-asset (new-redeem-commission-asset uint))
