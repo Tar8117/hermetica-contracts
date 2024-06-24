@@ -157,6 +157,7 @@
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (>= amount-usdh (get-min-redeem-amount)) ERR_BELOW_MIN)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
 
     (try! (contract-call? .usdh-token transfer amount-usdh tx-sender minting-contract none))
 

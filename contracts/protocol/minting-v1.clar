@@ -334,6 +334,7 @@
     (asserts! (is-eq oracle-price-feed-id minting-asset-price-feed-id) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
     (asserts! (>= amount-usdh-requested (get-min-amount-usdh-requested)) ERR_BELOW_MIN)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
     
     (try! (contract-call? minting-asset transfer amount-asset tx-sender minting-contract none))
     
@@ -408,6 +409,7 @@
     (asserts! (is-eq oracle-price-feed-id redeeming-asset-price-feed-id) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
     (asserts! (>= amount-usdh (get-min-amount-usdh-requested)) ERR_BELOW_MIN)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
     
     (try! (contract-call? .usdh-token transfer amount-usdh tx-sender minting-contract none))
     
@@ -520,7 +522,7 @@
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
     (asserts! (is-eq redeeming-asset-contract (contract-of redeeming-asset)) ERR_ASSET_MISMATCH)
     (asserts! (is-eq amount-usdh amount-usdh-requested) ERR_AMOUNT_MISMATCH)
-    (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
+    (asserts! (<= price (+ price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
     (try! (contract-call? .redeeming-reserve transfer amount-asset-confirmed (get requester redeem-request) redeeming-asset))
     (try! (as-contract (contract-call? .usdh-token burn-for-protocol (- amount-usdh amount-usdh-commission) tx-sender)))
@@ -700,6 +702,7 @@
     (asserts! (is-eq tx-sender (var-get timestamper)) ERR_NOT_ALLOWED)
     (asserts! (> timestamp (get-last-mint-limit-reset)) ERR_STALE_DATA)
     (var-set last-mint-limit-reset timestamp)
+    (var-set last-oracle-timestamp timestamp)
     (ok true)
   )
 )
