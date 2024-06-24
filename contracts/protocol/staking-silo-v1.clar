@@ -62,10 +62,9 @@
 (define-public (claim (claim-id uint))
   (let (
     (current-claim (try! (get-claim claim-id)))
-    (recipient (get recipient current-claim))
   )
     (asserts! (>= burn-block-height (+ (get claim-block-height current-claim) (get-cooldown-window))) ERR_NOT_COOLED_DOWN)
-    (try! (as-contract (contract-call? .usdh-token transfer (get amount current-claim) tx-sender recipient none)))
+    (try! (as-contract (contract-call? .usdh-token transfer (get amount current-claim) tx-sender (get recipient current-claim) none)))
     (map-delete claims { claim-id: claim-id })
     (ok true)
   )

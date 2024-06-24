@@ -89,7 +89,6 @@
     minting-asset: principal,
     amount-asset: uint,           ;; BTC; token-base
     price: uint,                  ;; BTCUSD; oracle-base
-    amount-usdh-requested: uint,  ;; USDh; usdh-base
     slippage: uint,               ;; bps
     block-height: uint,           ;; burn-block-height
   }
@@ -104,7 +103,6 @@
     redeeming-asset: principal,
     amount-usdh: uint,            ;; USDh; usdh-base
     price: uint,                  ;; BTCUSD; oracle-base
-    amount-asset-requested: uint, ;; BTC; token-base
     slippage: uint,               ;; bps
     block-height: uint,           ;; burn-block-height
   }
@@ -309,9 +307,7 @@
     (minting-asset-contract (contract-of minting-asset))
     (token-base (get token-base (try! (get-supported-asset minting-asset-contract))))
     (amount-usdh-requested (/ (* amount-asset price usdh-base) oracle-base token-base))
-    (minting-asset-price-feed-id (get price-feed-id (try! (get-supported-asset minting-asset-contract))))
-    (decoded-prices (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds price-feed-bytes execution-plan)))
-    (decoded-price (element-at decoded-prices u0))
+    (decoded-price (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds price-feed-bytes execution-plan)) u0))
     (oracle-price (to-uint (unwrap-panic (get price decoded-price))))
     (timestamp (unwrap-panic (get publish-time decoded-price)))
     (oracle-price-feed-id (unwrap-panic (get price-identifier decoded-price)))
@@ -331,7 +327,7 @@
     )
     (asserts! (<= amount-usdh-requested (get-current-mint-limit)) ERR_MINT_LIMIT_EXCEEDED)
     (asserts! (> timestamp (get-last-oracle-timestamp)) ERR_STALE_DATA)
-    (asserts! (is-eq oracle-price-feed-id minting-asset-price-feed-id) ERR_PRICE_FEED_MISMATCH)
+    (asserts! (is-eq oracle-price-feed-id (get price-feed-id (try! (get-supported-asset minting-asset-contract)))) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
     (asserts! (>= amount-usdh-requested (get-min-amount-usdh-requested)) ERR_BELOW_MIN)
     (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
@@ -344,7 +340,6 @@
         minting-asset: minting-asset-contract,
         amount-asset: amount-asset,                     ;; BTC; token-base
         price: price,                                   ;; BTCUSD; oracle-base
-        amount-usdh-requested: amount-usdh-requested,   ;; USDh; usdh-base
         slippage: slippage,                             ;; bps
         block-height: burn-block-height,
       }
@@ -363,14 +358,12 @@
 (define-public (claim-unconfirmed-mint (entry { request-id: uint, minting-asset: <sip-010-trait> }))
   (let (
     (mint-request (try! (get-mint-request (get request-id entry))))
-    (requester (get requester mint-request))
-    (minting-asset-contract (get minting-asset mint-request))
     (minting-asset-entry (get minting-asset entry))
   )
     (asserts! (> burn-block-height (+ (get block-height mint-request) (get-mint-confirmation-window))) ERR_CONFIRMATION_OPEN)
-    (asserts! (is-eq minting-asset-contract (contract-of minting-asset-entry)) ERR_ASSET_MISMATCH)
+    (asserts! (is-eq (get minting-asset mint-request) (contract-of minting-asset-entry)) ERR_ASSET_MISMATCH)
     
-    (try! (as-contract (contract-call? minting-asset-entry transfer (get amount-asset mint-request) tx-sender requester none)))
+    (try! (as-contract (contract-call? minting-asset-entry transfer (get amount-asset mint-request) tx-sender (get requester mint-request) none)))
     (map-delete mint-requests { request-id: (get request-id entry)})
     (ok true)
   )
@@ -392,9 +385,7 @@
     (redeeming-asset-contract (contract-of redeeming-asset))
     (token-base (get token-base (try! (get-supported-asset redeeming-asset-contract))))
     (amount-asset-requested (/ (* amount-usdh oracle-base token-base) price usdh-base))
-    (redeeming-asset-price-feed-id (get price-feed-id (try! (get-supported-asset redeeming-asset-contract))))
-    (decoded-prices (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds price-feed-bytes execution-plan)))
-    (decoded-price (element-at decoded-prices u0))
+    (decoded-price (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds price-feed-bytes execution-plan)) u0))
     (oracle-price (to-uint (unwrap-panic (get price decoded-price))))
     (timestamp (unwrap-panic (get publish-time decoded-price)))
     (oracle-price-feed-id (unwrap-panic (get price-identifier decoded-price)))
@@ -406,7 +397,7 @@
     (if (get-whitelist-enabled) (asserts! (get redeemer (get-whitelist tx-sender)) ERR_NOT_ALLOWED) true)
     (asserts! (check-is-supported-asset redeeming-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (> timestamp (var-get last-oracle-timestamp)) ERR_STALE_DATA)
-    (asserts! (is-eq oracle-price-feed-id redeeming-asset-price-feed-id) ERR_PRICE_FEED_MISMATCH)
+    (asserts! (is-eq oracle-price-feed-id (get price-feed-id (try! (get-supported-asset redeeming-asset-contract)))) ERR_PRICE_FEED_MISMATCH)
     (asserts! (and (> price min-price) (< price max-price)) ERR_PRICE_OUT_OF_RANGE)
     (asserts! (>= amount-usdh (get-min-amount-usdh-requested)) ERR_BELOW_MIN)
     (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
@@ -419,7 +410,6 @@
         redeeming-asset: redeeming-asset-contract,
         amount-usdh: amount-usdh,                       ;; USDh; usdh-base
         price: price,                                   ;; BTCUSD; oracle-base
-        amount-asset-requested: amount-asset-requested, ;; BTC; token-base
         slippage: slippage,                             ;; bps
         block-height: burn-block-height,
       }
@@ -437,11 +427,10 @@
 (define-public (claim-unconfirmed-redeem (redeem-id uint))
   (let (
     (redeem-request (try! (get-redeem-request redeem-id)))
-    (requester (get requester redeem-request))
   )
     (asserts! (> burn-block-height (+ (get block-height redeem-request) (get-redeem-confirmation-window))) ERR_CONFIRMATION_OPEN)
     
-    (try! (as-contract (contract-call? .usdh-token transfer (get amount-usdh redeem-request) tx-sender requester none)))
+    (try! (as-contract (contract-call? .usdh-token transfer (get amount-usdh redeem-request) tx-sender (get requester redeem-request) none)))
     (map-delete redeem-requests { request-id: redeem-id })
     (ok true)
   )
@@ -455,7 +444,6 @@
   (let (
     (mint-request (try! (get-mint-request request-id)))
     (price-requested (get price mint-request))
-    (amount-requested (get amount-asset mint-request))
     (minting-asset-contract (get minting-asset mint-request))
     (slippage-tolerance (/ (* price-requested (get slippage mint-request)) bps-base))
     (token-base (get token-base (try! (get-supported-asset (contract-of minting-asset)))))
@@ -470,7 +458,7 @@
     (asserts! (get-custody-address-active custody-address) ERR_NOT_CUSTODY_ADDRESS)
     (asserts! (check-is-supported-asset minting-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (is-eq minting-asset-contract (contract-of minting-asset)) ERR_ASSET_MISMATCH)
-    (asserts! (is-eq amount-asset amount-requested) ERR_AMOUNT_MISMATCH)
+    (asserts! (is-eq amount-asset (get amount-asset mint-request)) ERR_AMOUNT_MISMATCH)
     (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
     (try! (contract-call? .usdh-token mint-for-protocol amount-usdh-confirmed (get requester mint-request)))
@@ -490,16 +478,13 @@
   (let (
     (mint-request (try! (get-mint-request (get request-id entry))))
     (minting-asset-entry (get minting-asset entry))
-    (minting-asset-contract (get minting-asset mint-request))
-    (amount-asset-requested (get amount-asset mint-request))
-    (requester (get requester mint-request))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get mint-enabled) ERR_TRADING_DISABLED)
     (asserts! (get minter (get-trader tx-sender)) ERR_NOT_ALLOWED)
-    (asserts! (is-eq minting-asset-contract (contract-of minting-asset-entry)) ERR_ASSET_MISMATCH)
+    (asserts! (is-eq (get minting-asset mint-request) (contract-of minting-asset-entry)) ERR_ASSET_MISMATCH)
 
-    (try! (as-contract (contract-call? minting-asset-entry transfer amount-asset-requested tx-sender requester none)))
+    (try! (as-contract (contract-call? minting-asset-entry transfer (get amount-asset mint-request) tx-sender (get requester mint-request) none)))
     (map-delete mint-requests { request-id: (get request-id entry) })
     (ok true)
   )
@@ -509,7 +494,6 @@
   (let (
     (redeem-request (try! (get-redeem-request request-id)))
     (price-requested (get price redeem-request))
-    (amount-usdh-requested (get amount-usdh redeem-request))
     (redeeming-asset-contract (get redeeming-asset redeem-request))
     (slippage-tolerance (/ (* price-requested (get slippage redeem-request)) bps-base))
     (token-base (get token-base (try! (get-supported-asset (contract-of redeeming-asset)))))
@@ -523,7 +507,7 @@
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
     (asserts! (check-is-supported-asset redeeming-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (is-eq redeeming-asset-contract (contract-of redeeming-asset)) ERR_ASSET_MISMATCH)
-    (asserts! (is-eq amount-usdh amount-usdh-requested) ERR_AMOUNT_MISMATCH)
+    (asserts! (is-eq amount-usdh (get amount-usdh redeem-request)) ERR_AMOUNT_MISMATCH)
     (asserts! (<= price (+ price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
     (try! (contract-call? .redeeming-reserve transfer amount-asset-confirmed (get requester redeem-request) redeeming-asset))
@@ -542,14 +526,12 @@
 (define-public (cancel-redeem-request (request-id uint))
   (let (
     (redeem-request (try! (get-redeem-request request-id)))
-    (amount-usdh-requested (get amount-usdh redeem-request))
-    (requester (get requester redeem-request))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
 
-    (try! (as-contract (contract-call? .usdh-token transfer amount-usdh-requested tx-sender requester none)))
+    (try! (as-contract (contract-call? .usdh-token transfer (get amount-usdh redeem-request) tx-sender (get requester redeem-request) none)))
     (map-delete redeem-requests { request-id: request-id })
     (ok true)
   )
@@ -697,8 +679,7 @@
     wormhole-core-contract: <wormhole-core-trait>
   }))
   (let (
-    (decoded-prices (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds price-feed-bytes execution-plan)))
-    (decoded-price (element-at decoded-prices u0))
+    (decoded-price (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds price-feed-bytes execution-plan)) u0))
     (timestamp (unwrap-panic (get publish-time decoded-price)))
   )
     (asserts! (is-eq tx-sender (var-get timestamper)) ERR_NOT_ALLOWED)
