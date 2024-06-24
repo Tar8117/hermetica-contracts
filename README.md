@@ -3,7 +3,7 @@
 | Date | Report | Repo Link |
 | ----------- | ------ | --------- |
 | 06/2024 | [ClarityAlliance report]() | [Link]()
-| 06/2024 | [StrataLabs report]() | [Link]()
+| 06/2024 | [StrataLabs report]() | [Link](https://drive.google.com/file/d/1l9IYGUp0jmGOaNPW4pVP5ZbpWOTN3yor/view)
 
 
 ## Documentation
