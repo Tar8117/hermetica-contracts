@@ -45,7 +45,6 @@
 
 (define-data-var mint-commission-usdh uint u10)                 ;; bps
 (define-data-var redeem-commission-usdh uint u10)               ;; bps
-(define-data-var mint-commission-asset uint u10)                ;; bps
 (define-data-var redeem-commission-asset uint u10)              ;; bps
 
 ;;-------------------------------------
@@ -123,10 +122,6 @@
 
 (define-read-only (get-redeem-commission-usdh) 
   (var-get redeem-commission-usdh)
-)
-
-(define-read-only (get-mint-commission-asset) 
-  (var-get mint-commission-asset)
 )
 
 (define-read-only (get-redeem-commission-asset) 
@@ -332,13 +327,6 @@
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-redeem-commission-usdh max-commission) ERR_ABOVE_MAX)
     (ok (var-set redeem-commission-usdh new-redeem-commission-usdh)))
-)
-
-(define-public (set-mint-commission-asset (new-mint-commission-asset uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-mint-commission-asset max-commission) ERR_ABOVE_MAX)
-    (ok (var-set mint-commission-asset new-mint-commission-asset)))
 )
 
 (define-public (set-redeem-commission-asset (new-redeem-commission-asset uint))
