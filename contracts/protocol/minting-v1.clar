@@ -700,7 +700,7 @@
     (timestamp (unwrap-panic (get publish-time decoded-price)))
   )
     (asserts! (is-eq tx-sender (var-get timestamper)) ERR_NOT_ALLOWED)
-    (asserts! (> timestamp (get-last-mint-limit-reset)) ERR_STALE_DATA)
+    (asserts! (> timestamp (var-get last-oracle-timestamp)) ERR_STALE_DATA)
     (var-set last-mint-limit-reset timestamp)
     (var-set last-oracle-timestamp timestamp)
     (ok true)
