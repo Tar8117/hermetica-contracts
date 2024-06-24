@@ -29,9 +29,14 @@
   )
   (try! (contract-call? .hq check-is-enabled))
   (try! (contract-call? .hq check-is-protocol tx-sender))
-  (try! (contract-call? .blacklist-susdh check-is-not-full-blacklist recipient))
-
-  (asserts! (contract-call? .blacklist-susdh get-full-blacklist address) ERR_NOT_BLACKLISTED)
+  
+  (if (contract-call? .susdh-token get-blacklist-enabled)
+    (begin 
+      (try! (contract-call? .blacklist-susdh check-is-not-full-blacklist recipient))
+      (asserts! (contract-call? .blacklist-susdh get-full-blacklist address) ERR_NOT_BLACKLISTED)
+    )
+    true
+  )
 
   (try! (as-contract (contract-call? .susdh-token burn-for-protocol balance address)))
   (try! (as-contract (contract-call? .susdh-token mint-for-protocol balance recipient)))
