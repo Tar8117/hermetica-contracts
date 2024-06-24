@@ -148,3 +148,10 @@
     (ok true)
   )
 )
+
+(define-public (set-soft-blacklist-enabled (active bool))
+  (begin
+    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (ok (var-set soft-blacklist-enabled active))
+  )
+)

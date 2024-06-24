@@ -10,7 +10,7 @@
 ;; Constants 
 ;;-------------------------------------
 
-(define-constant token-base (pow u10 u8))
+(define-constant usdh-base (pow u10 u8))
 
 ;;-------------------------------------
 ;; Getters 
@@ -25,11 +25,11 @@
       (/ 
         (* 
           total-usdh-staked
-          token-base
+          usdh-base
         )
         total-susdh-supply
       )
-      token-base
+      usdh-base
     )
   )
 )
@@ -41,7 +41,7 @@
 (define-public (stake (amount uint))
   (let (
     (ratio (get-usdh-per-susdh))
-    (amount-susdh (/ (* amount token-base) ratio))
+    (amount-susdh (/ (* amount usdh-base) ratio))
   )
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist tx-sender))
@@ -56,7 +56,7 @@
 (define-public (unstake (amount uint))
   (let (
     (ratio (get-usdh-per-susdh))
-    (amount-usdh (/ (* amount ratio) token-base))
+    (amount-usdh (/ (* amount ratio) usdh-base))
   )
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist tx-sender))
@@ -67,4 +67,13 @@
     (print { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio })
     (ok true)
   )
+)
+
+;;-------------------------------------
+;; Init  
+;;-------------------------------------
+
+(begin 
+  (try! (contract-call? .susdh-token mint-for-protocol usdh-base .staking))
+  (try! (contract-call? .usdh-token mint-for-protocol usdh-base .staking-reserve))
 )

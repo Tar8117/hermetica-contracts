@@ -23,19 +23,29 @@
 (define-data-var contracts-enabled bool true)
 (define-data-var minting-enabled bool true)
 
+(define-data-var owner 
+  {
+    address: principal,
+  } 
+  {
+    address: tx-sender,
+  }
+)
+
+(define-data-var next-owner 
+  {
+    address: principal,
+    burn-block-height: uint
+  }
+  {
+    address: tx-sender,
+    burn-block-height: burn-block-height
+  }
+ )
+
 ;;-------------------------------------
 ;; Maps 
 ;;-------------------------------------
-
-(define-map owners
-  { 
-    address: principal 
-  }
-  {
-    active: bool,
-    block-height: (optional uint)
-  }
-)
 
 (define-map admins
   { 
@@ -43,6 +53,7 @@
   }
   {
     active: bool,
+    burn-block-height: (optional uint)
   }
 )
 
@@ -61,7 +72,7 @@
   } 
   { 
     active: bool,
-    block-height: (optional uint)
+    burn-block-height: (optional uint)
   }
 )
 
@@ -85,19 +96,18 @@
   (var-get minting-enabled)
 )
 
-(define-read-only (get-owner (address principal))
-  (default-to 
-    { active: false, block-height: none }
-    (map-get? owners { address: address })
-  )
+(define-read-only (get-owner)
+  (get address (var-get owner))
+)
+
+(define-read-only (get-next-owner)
+  (var-get next-owner)
 )
 
 (define-read-only (get-admin (address principal))
-  (get active 
-    (default-to 
-      { active: false }
-      (map-get? admins { address: address })
-    )
+  (default-to 
+    { active: false, burn-block-height: none }
+    (map-get? admins { address: address })
   )
 )
 
@@ -112,7 +122,7 @@
 
 (define-read-only (get-minting-contract (address principal))
   (default-to 
-    { active: false, block-height: none }
+    { active: false, burn-block-height: none }
     (map-get? minting-contracts { address: address })
   )
 )
@@ -139,14 +149,14 @@
 
 (define-public (check-is-owner (contract principal))
   (begin
-    (asserts! (get active (get-owner contract)) ERR_NOT_OWNER)
+    (asserts! (is-eq contract (get-owner)) ERR_NOT_OWNER)
     (ok true)
   )
 )
 
 (define-public (check-is-admin (contract principal))
   (begin
-    (asserts! (get-admin contract) ERR_NOT_ADMIN)
+    (asserts! (get active (get-admin contract)) ERR_NOT_ADMIN)
     (ok true)
   )
 )
@@ -212,35 +222,44 @@
 (define-public (request-owner-update (address principal))
   (begin
     (try! (check-is-owner tx-sender))
-    (map-set owners { address: address } { active: false, block-height: (some burn-block-height) })
+    (var-set next-owner { address: address, burn-block-height: burn-block-height })
     (ok true)
   )
 )
 
-(define-public (remove-owner (address principal))
+(define-public (activate-next-owner) 
   (begin
     (try! (check-is-owner tx-sender))
-    (map-delete owners { address: address })
+    (asserts! (>= burn-block-height (+ (get burn-block-height (get-next-owner)) activation-delay)) ERR_ACTIVATION)
+    (var-set owner {address: (get address (get-next-owner))})
     (ok true)
   )
 )
 
-(define-public (activate-owner (address principal))
+(define-public (request-admin-update (address principal))
+  (begin
+    (try! (check-is-owner tx-sender))
+    (map-set admins { address: address } { active: false, burn-block-height: (some burn-block-height) })
+    (ok true)
+  )
+)
+
+(define-public (remove-admin (address principal))
+  (begin
+    (try! (check-is-owner tx-sender))
+    (map-delete admins { address: address })
+    (ok true)
+  )
+)
+
+(define-public (activate-admin (address principal))
   (let (
-    (owner-entry (get-owner address))
-    (owner-block-height (unwrap! (get block-height owner-entry) ERR_NO_ENTRY))
+    (admin-entry (get-admin address))
+    (admin-burn-block-height (unwrap! (get burn-block-height admin-entry) ERR_NO_ENTRY))
   )
-    (try! (check-is-owner tx-sender))
-    (asserts! (>= burn-block-height (+ owner-block-height activation-delay)) ERR_ACTIVATION)
-    (map-set owners { address: address } (merge owner-entry { active: true }))
-    (ok true)
-  )
-)
-
-(define-public (set-admin (address principal) (active bool))
-  (begin
-    (try! (check-is-admin tx-sender))
-    (map-set admins { address: address } { active: active })
+    (asserts! (or (is-eq tx-sender (get-owner)) (is-eq address tx-sender)) ERR_NOT_OWNER)
+    (asserts! (>= burn-block-height (+ admin-burn-block-height activation-delay)) ERR_ACTIVATION)
+    (map-set admins { address: address } (merge admin-entry { active: true }))
     (ok true)
   )
 )
@@ -256,7 +275,7 @@
 (define-public (request-minting-contract-update (address principal))
   (begin
     (try! (check-is-owner tx-sender))
-    (map-set minting-contracts { address: address } { active: false, block-height: (some burn-block-height) })
+    (map-set minting-contracts { address: address } { active: false, burn-block-height: (some burn-block-height) })
     (ok true)
   )
 )
@@ -272,10 +291,10 @@
 (define-public (activate-minting-contract (address principal))
   (let (
     (contract-entry (get-minting-contract address))
-    (contract-block-height (unwrap! (get block-height contract-entry) ERR_NO_ENTRY))
+    (contract-burn-block-height (unwrap! (get burn-block-height contract-entry) ERR_NO_ENTRY))
   )
     (try! (check-is-owner tx-sender))
-    (asserts! (>= burn-block-height (+ contract-block-height activation-delay)) ERR_ACTIVATION)
+    (asserts! (>= burn-block-height (+ contract-burn-block-height activation-delay)) ERR_ACTIVATION)
     (map-set minting-contracts {address: address} (merge contract-entry { active: true}))
     (ok true)
   )
@@ -293,14 +312,13 @@
 ;; Init 
 ;;-------------------------------------
 
-(map-set owners { address: tx-sender } { active: true, block-height: (some block-height) })
-(map-set admins { address: tx-sender } { active: true })
+(map-set admins { address: tx-sender } { active: true, burn-block-height: none })
 (map-set guardians { address: tx-sender } { active: true })
-(map-set minting-contracts { address: .minting } { active: true, block-height: (some block-height) })
-(map-set minting-contracts { address: .minting-otc } { active: true, block-height: (some block-height) })
-(map-set minting-contracts { address: .controller } { active: true, block-height: (some block-height) })
-(map-set minting-contracts { address: .recover } { active: true, block-height: (some block-height) }) 
-(map-set minting-contracts { address: .staking } { active: true, block-height: (some block-height) }) 
+(map-set minting-contracts { address: .minting } { active: true, burn-block-height: (some burn-block-height) })
+(map-set minting-contracts { address: .minting-otc } { active: true, burn-block-height: (some burn-block-height) })
+(map-set minting-contracts { address: .controller } { active: true, burn-block-height: (some burn-block-height) })
+(map-set minting-contracts { address: .recover } { active: true, burn-block-height: (some burn-block-height) }) 
+(map-set minting-contracts { address: .staking } { active: true, burn-block-height: (some burn-block-height) }) 
 (map-set contracts { address: tx-sender } { active: true })
 (map-set contracts { address: .hq } { active: true })
 (map-set contracts { address: .minting } { active: true })

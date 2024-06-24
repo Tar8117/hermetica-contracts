@@ -45,7 +45,6 @@
 
 (define-data-var mint-commission-usdh uint u10)                 ;; bps
 (define-data-var redeem-commission-usdh uint u10)               ;; bps
-(define-data-var mint-commission-asset uint u10)                ;; bps
 (define-data-var redeem-commission-asset uint u10)              ;; bps
 
 ;;-------------------------------------
@@ -71,7 +70,6 @@
     btc-address: (string-ascii 64),
     amount-usdh: uint,            ;; USDh; usdh-base
     price: uint,                  ;; BTCUSD; oracle-base
-    amount-asset-requested: uint, ;; BTC; token-base
     slippage: uint,               ;; bps
     block-height: uint,           ;; burn-block-height
   }
@@ -125,10 +123,6 @@
   (var-get redeem-commission-usdh)
 )
 
-(define-read-only (get-mint-commission-asset) 
-  (var-get mint-commission-asset)
-)
-
 (define-read-only (get-redeem-commission-asset) 
   (var-get redeem-commission-asset)
 )
@@ -152,11 +146,11 @@
 (define-public (request-redeem (btc-address (string-ascii 64)) (amount-usdh uint) (price uint) (slippage uint))
   (let (
     (next-redeem-id (+ (get-current-redeem-id) u1))
-    (amount-asset-requested (/ (* amount-usdh oracle-base (pow u10 u8)) price usdh-base))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (>= amount-usdh (get-min-redeem-amount)) ERR_BELOW_MIN)
+    (asserts! (<= slippage bps-base) ERR_ABOVE_MAX)
 
     (try! (contract-call? .usdh-token transfer amount-usdh tx-sender minting-contract none))
 
@@ -166,7 +160,6 @@
         btc-address: btc-address,
         amount-usdh: amount-usdh,                       ;; USDh
         price: price,                                   ;; BTCUSD
-        amount-asset-requested: amount-asset-requested, ;; BTC; token-base
         slippage: slippage,                             ;; bps
         block-height: burn-block-height,
       }
@@ -206,7 +199,7 @@
     (asserts! (var-get mint-enabled) ERR_TRADING_DISABLED)
     (asserts! (get minter (get-trader tx-sender)) ERR_NOT_ALLOWED)
 
-    (if (> burn-block-height (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
+    (if (>= burn-block-height (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window))) 
       (begin
         (var-set current-mint-limit (get-mint-limit))
         (var-set last-mint-limit-reset burn-block-height) 
@@ -228,9 +221,6 @@
   (let (
     (redeem-request (try! (get-redeem-request request-id)))
     (price-requested (get price redeem-request))
-    (amount-usdh-requested (get amount-usdh redeem-request))
-    (btc-address (get btc-address redeem-request))
-    (requester (get requester redeem-request))
     (slippage-tolerance (/ (* price-requested (get slippage redeem-request)) bps-base))
     (amount-usdh-commission (/ (* amount-usdh (var-get redeem-commission-usdh)) bps-base))
     (amount-usdh-confirmed (- amount-usdh amount-usdh-commission))
@@ -239,10 +229,10 @@
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
-    (asserts! (is-eq amount-usdh amount-usdh-requested) ERR_AMOUNT_MISMATCH)
+    (asserts! (is-eq amount-usdh (get amount-usdh redeem-request)) ERR_AMOUNT_MISMATCH)
     (asserts! (>= price (- price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
-    (print { request-id: request-id, price: price, amount-usdh: amount-usdh, amount-usdh-confirmed: amount-usdh-confirmed, amount-asset-confirmed: amount-asset-confirmed, btc-address: btc-address })
+    (print { request-id: request-id, price: price, amount-usdh: amount-usdh, amount-usdh-confirmed: amount-usdh-confirmed, amount-asset-confirmed: amount-asset-confirmed, btc-address: (get btc-address redeem-request) })
     (try! (as-contract (contract-call? .usdh-token burn-for-protocol amount-usdh-confirmed tx-sender)))
     (if (> amount-usdh-commission u0) (try! (as-contract (contract-call? .usdh-token transfer amount-usdh-commission tx-sender .reserve none))) true)
 
@@ -257,14 +247,12 @@
 (define-public (cancel-redeem-request (request-id uint))
   (let (
     (redeem-request (try! (get-redeem-request request-id)))
-    (amount-usdh-requested (get amount-usdh redeem-request))
-    (requester (get requester redeem-request))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (var-get redeem-enabled) ERR_TRADING_DISABLED)
     (asserts! (get redeemer (get-trader tx-sender)) ERR_NOT_ALLOWED)
 
-    (try! (as-contract (contract-call? .usdh-token transfer amount-usdh-requested tx-sender requester none)))
+    (try! (as-contract (contract-call? .usdh-token transfer (get amount-usdh redeem-request) tx-sender (get requester redeem-request) none)))
     (map-delete redeem-requests { request-id: request-id })
     (ok true)
   )
@@ -331,13 +319,6 @@
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-redeem-commission-usdh max-commission) ERR_ABOVE_MAX)
     (ok (var-set redeem-commission-usdh new-redeem-commission-usdh)))
-)
-
-(define-public (set-mint-commission-asset (new-mint-commission-asset uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-mint-commission-asset max-commission) ERR_ABOVE_MAX)
-    (ok (var-set mint-commission-asset new-mint-commission-asset)))
 )
 
 (define-public (set-redeem-commission-asset (new-redeem-commission-asset uint))
