@@ -590,12 +590,10 @@
 )
 
 (define-public (set-mint-limit (new-mint-limit uint))
-  (let (
-    (new-mint-limit-usdh-base (* new-mint-limit usdh-base))
-  )
+  (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-mint-limit-usdh-base max-mint-limit) ERR_ABOVE_MAX)
-    (ok (var-set mint-limit new-mint-limit-usdh-base)))
+    (asserts! (<= new-mint-limit max-mint-limit) ERR_ABOVE_MAX)
+    (ok (var-set mint-limit new-mint-limit)))
 )
 
 (define-public (set-mint-limit-reset-window (new-window uint))
@@ -634,11 +632,9 @@
 )
 
 (define-public (set-min-amount-usdh-requested (new-min-amount-usdh-requested uint))
-  (let (
-    (new-min-amount-usdh-requested-usdh-base (* new-min-amount-usdh-requested usdh-base))
-  )
+  (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
-    (ok (var-set min-amount-usdh-requested new-min-amount-usdh-requested-usdh-base))
+    (ok (var-set min-amount-usdh-requested new-min-amount-usdh-requested))
   )
 )
 
