@@ -87,7 +87,5 @@
 
 ;; Burn external
 (define-public (burn (amount uint))
-  (begin
-    (ft-burn? usdh amount tx-sender)
-  )
+  (ft-burn? usdh amount tx-sender)
 )
