@@ -23,14 +23,7 @@
 (define-data-var contracts-enabled bool true)
 (define-data-var minting-enabled bool true)
 
-(define-data-var owner 
-  {
-    address: principal,
-  } 
-  {
-    address: tx-sender,
-  }
-)
+(define-data-var owner principal tx-sender)
 
 (define-data-var next-owner 
   {
@@ -97,7 +90,7 @@
 )
 
 (define-read-only (get-owner)
-  (get address (var-get owner))
+  (var-get owner)
 )
 
 (define-read-only (get-next-owner)
@@ -231,7 +224,7 @@
   (begin
     (try! (check-is-owner tx-sender))
     (asserts! (>= burn-block-height (+ (get burn-block-height (get-next-owner)) activation-delay)) ERR_ACTIVATION)
-    (var-set owner {address: (get address (get-next-owner))})
+    (var-set owner (get address (get-next-owner)))
     (ok true)
   )
 )
