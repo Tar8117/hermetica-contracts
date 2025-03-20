@@ -161,7 +161,7 @@
   )
 )
 
-(define-public (check-is-minter (contract principal))
+(define-public (check-is-minting-contract (contract principal))
   (begin
     (asserts! (get-minting-enabled) ERR_MINTING_DISABLED)
     (asserts! (get active (get-minting-contract contract)) ERR_INACTIVE_CONTRACT)
