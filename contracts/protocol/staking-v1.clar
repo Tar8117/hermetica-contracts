@@ -63,7 +63,7 @@
     
     (try! (contract-call? .susdh-token burn-for-protocol amount tx-sender))
     (try! (contract-call? .staking-silo create-claim amount-usdh tx-sender))
-    (try! (contract-call? .staking-reserve transfer amount-usdh .staking-silo))
+    (try! (contract-call? .staking-reserve transfer amount-usdh))
     (print { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio })
     (ok true)
   )
