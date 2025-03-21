@@ -465,41 +465,6 @@
     (ok (var-set mint-limit-reset-window new-window)))
 )
 
-(define-public (set-mint-commission-usdh (new-mint-commission-usdh uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-mint-commission-usdh max-commission) ERR_ABOVE_MAX)
-    (ok (var-set mint-commission-usdh new-mint-commission-usdh)))
-)
-
-(define-public (set-redeem-commission-usdh (new-redeem-commission-usdh uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-redeem-commission-usdh max-commission) ERR_ABOVE_MAX)
-    (ok (var-set redeem-commission-usdh new-redeem-commission-usdh)))
-)
-
-(define-public (set-mint-commission-asset (new-mint-commission-asset uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-mint-commission-asset max-commission) ERR_ABOVE_MAX)
-    (ok (var-set mint-commission-asset new-mint-commission-asset)))
-)
-
-(define-public (set-redeem-commission-asset (new-redeem-commission-asset uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= new-redeem-commission-asset max-commission) ERR_ABOVE_MAX)
-    (ok (var-set redeem-commission-asset new-redeem-commission-asset)))
-)
-
-(define-public (set-min-amount-usdh-requested (new-min-amount-usdh-requested uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (ok (var-set min-amount-usdh-requested new-min-amount-usdh-requested))
-  )
-)
-
 (define-public (set-trader (address principal) (mint bool) (redeem bool))
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
