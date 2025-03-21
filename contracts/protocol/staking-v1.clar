@@ -47,7 +47,7 @@
     (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist tx-sender))
     (try! (contract-call? .hq check-is-enabled))
 
-    (try! (contract-call? .usdh-token transfer amount tx-sender .staking-reserve none))
+    (try! (contract-call? .usdh-token transfer amount tx-sender .staking none))
     (try! (contract-call? .susdh-token mint-for-protocol amount-susdh tx-sender))
     (ok true)
   )
@@ -63,17 +63,16 @@
     
     (try! (contract-call? .susdh-token burn-for-protocol amount tx-sender))
     (try! (contract-call? .staking-silo create-claim amount-usdh tx-sender))
-    (try! (contract-call? .staking-reserve transfer amount-usdh))
+    (try! (contract-call? .usdh-token transfer amount-usdh (as-contract tx-sender) .staking-silo none))
     (print { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio })
     (ok true)
   )
 )
-
 ;;-------------------------------------
 ;; Init  
 ;;-------------------------------------
 
 (begin 
   (try! (contract-call? .susdh-token mint-for-protocol usdh-base .staking))
-  (try! (contract-call? .usdh-token mint-for-protocol usdh-base .staking-reserve))
+  (try! (contract-call? .usdh-token mint-for-protocol usdh-base .staking))
 )
