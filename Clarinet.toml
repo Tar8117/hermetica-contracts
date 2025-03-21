@@ -12,11 +12,6 @@ path = 'contracts/protocol/minting-state-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
-[contracts.reserve]
-path = 'contracts/protocol/reserve-v1.clar'
-clarity_version = 2
-epoch = 2.5
-
 [contracts.controller]
 path = 'contracts/protocol/controller-v1.clar'
 clarity_version = 2
@@ -24,11 +19,6 @@ epoch = 2.5
 
 [contracts.hq]
 path = 'contracts/protocol/hq-v1.clar'
-clarity_version = 2
-epoch = 2.5
-
-[contracts.insurance-fund]
-path = 'contracts/protocol/insurance-fund-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
@@ -59,11 +49,6 @@ epoch = 2.5
 
 [contracts.staking-silo]
 path = 'contracts/protocol/staking-silo-v1.clar'
-clarity_version = 2
-epoch = 2.5
-
-[contracts.staking-reserve]
-path = 'contracts/protocol/staking-reserve-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
