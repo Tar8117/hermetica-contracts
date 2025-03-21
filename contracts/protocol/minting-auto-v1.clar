@@ -2,9 +2,9 @@
 ;; @version 1
 
 (use-trait sip-010-trait .sip-010-trait.sip-010-trait)
-(use-trait pyth-storage-trait 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-traits-v1.storage-trait)
-(use-trait pyth-decoder-trait 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-traits-v1.decoder-trait)
-(use-trait wormhole-core-trait 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.wormhole-traits-v1.core-trait)
+(use-trait pyth-storage-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-traits-v1.storage-trait)
+(use-trait pyth-decoder-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-traits-v1.decoder-trait)
+(use-trait wormhole-core-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.wormhole-traits-v1.core-trait)
 
 ;;-------------------------------------
 ;; Constants
@@ -145,7 +145,7 @@
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (var-get block-delay)))))
     (decoded-price
       (match price-feed-bytes value
-        (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds value execution-plan)) u0)
+        (element-at (try! (contract-call? 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3 decode-price-feeds value execution-plan)) u0)
         (some { conf: u0, ema-conf: u0, ema-price: 0, expo: 0, prev-publish-time: u0, price: (to-int oracle-base), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )
@@ -203,7 +203,7 @@
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (var-get block-delay)))))
     (decoded-price
       (match price-feed-bytes value
-        (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds value execution-plan)) u0)
+        (element-at (try! (contract-call? 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3 decode-price-feeds value execution-plan)) u0)
         (some { conf: u0, ema-conf: u0, ema-price: 0, expo: 0, prev-publish-time: u0, price: (to-int oracle-base), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )
