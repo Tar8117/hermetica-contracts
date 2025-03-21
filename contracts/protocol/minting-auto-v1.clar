@@ -20,6 +20,7 @@
 (define-constant ERR_NOT_WHITELISTED (err u2308))
 (define-constant ERR_SLIPPAGE_TOO_HIGH (err u2309))
 (define-constant ERR_TOKEN_BASE_MISMATCH (err u2310))
+(define-constant ERR_NOT_STANDARD_PRINCIPAL (err u2311))
 
 (define-constant bps-base (pow u10 u4))
 (define-constant oracle-base (pow u10 u8))
@@ -259,6 +260,8 @@
 (define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool))
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
+    (asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
+    (asserts! (is-standard asset) ERR_NOT_STANDARD_PRINCIPAL)
     (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer }))
   )
 )
@@ -266,6 +269,7 @@
 (define-public (set-custody-address (new-custody-address principal))
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
+    (asserts! (is-standard new-custody-address) ERR_NOT_STANDARD_PRINCIPAL)
     (ok (var-set custody-address new-custody-address))
   )
 )
