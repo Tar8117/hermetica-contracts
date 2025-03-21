@@ -237,6 +237,7 @@
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-mint-limit max-mint-limit) ERR_ABOVE_MAX)
+    (print { old-value: (get-mint-limit), new-value: new-mint-limit })
     (ok (var-set mint-limit new-mint-limit)))
 )
 
@@ -244,6 +245,7 @@
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (>= new-window min-mint-limit-reset-window) ERR_BELOW_MIN)
+    (print { old-value: (get-mint-limit-reset-window), new-value: new-window })
     (ok (var-set mint-limit-reset-window new-window)))
 )
 
@@ -252,6 +254,7 @@
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-amount max-block-delay) ERR_ABOVE_MAX)
     (asserts! (> new-amount u0) ERR_BELOW_MIN)
+    (print { old-value: (get-block-delay), new-value: new-amount })
     (ok (var-set block-delay new-amount))
   )
 )
@@ -259,6 +262,7 @@
 (define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool))
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
+    (print { address: address, asset: asset, old-values: (get-whitelist address asset),  new-values: { minter: minter, redeemer: redeemer } })
     (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer }))
   )
 )
@@ -266,15 +270,28 @@
 (define-public (set-custody-address (new-custody-address principal))
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
+    (print { old-value: (get-custody-address), new-value: new-custody-address })
     (ok (var-set custody-address new-custody-address))
   )
 )
 
 (define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (token-base uint) (slippage uint))
-  (begin
+  (let (
+    (token-address (contract-of token))
+  )
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= slippage max-slippage) ERR_ABOVE_MAX)
     (asserts! (is-eq token-base (pow u10 (unwrap-panic (contract-call? token get-decimals)))) ERR_TOKEN_BASE_MISMATCH)
-    (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: slippage }))
+    (if (check-is-supported-asset token-address)
+      (print { 
+        contract: token-address, 
+        old-values: (some (unwrap-panic (get-supported-asset token-address))), 
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: slippage } })
+      (print { 
+        contract: token-address, 
+        old-values: none, 
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: slippage } })
+    )
+    (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: slippage }))
   )
 )
