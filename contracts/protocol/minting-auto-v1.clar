@@ -19,7 +19,6 @@
 (define-constant ERR_BELOW_MIN (err u2307))
 (define-constant ERR_NOT_WHITELISTED (err u2308))
 (define-constant ERR_PRICE_SLIPPAGE_TOO_HIGH (err u2309))
-(define-constant ERR_TOKEN_BASE_MISMATCH (err u2310))
 (define-constant ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO (err u2311))
 (define-constant ERR_NOT_STANDARD_PRINCIPAL (err u2312))
 
@@ -279,11 +278,10 @@
   )
 )
 
-(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (token-base uint) (price-slippage uint))
+(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (price-slippage uint))
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= price-slippage max-price-slippage) ERR_ABOVE_MAX)
-    (asserts! (is-eq token-base (pow u10 (unwrap-panic (contract-call? token get-decimals)))) ERR_TOKEN_BASE_MISMATCH)
-    (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage }))
+    (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: (pow u10 (unwrap-panic (contract-call? token get-decimals))), price-slippage: price-slippage }))
   )
 )
