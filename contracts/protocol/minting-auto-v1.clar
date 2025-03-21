@@ -222,7 +222,7 @@
     (asserts! (<= slippage-bps slippage-tolerance ) ERR_SLIPPAGE_TOO_HIGH)
 
     (try! (contract-call? .usdh-token burn-for-protocol amount-usdh-requested tx-sender))
-    (try! (contract-call? .redeeming-reserve transfer amount-asset-required tx-sender redeeming-asset))
+    (try! (contract-call? .redeeming-reserve transfer amount-asset-required tx-sender redeeming-asset memo))
 
     (print { price: price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, redeeming-asset: redeeming-asset-contract })
     (ok (var-set current-mint-limit (- (get-current-mint-limit) amount-usdh-requested)))
