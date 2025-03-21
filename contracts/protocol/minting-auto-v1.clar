@@ -20,6 +20,7 @@
 (define-constant ERR_NOT_WHITELISTED (err u2308))
 (define-constant ERR_PRICE_SLIPPAGE_TOO_HIGH (err u2309))
 (define-constant ERR_TOKEN_BASE_MISMATCH (err u2310))
+(define-constant ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO (err u2311))
 
 (define-constant bps-base (pow u10 u4))
 (define-constant oracle-base (pow u10 u8))
@@ -160,6 +161,8 @@
     (asserts! (check-is-supported-asset minting-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (> timestamp block-timestamp) ERR_STALE_DATA)
     (asserts! (<= price-slippage-bps price-slippage-tolerance ) ERR_PRICE_SLIPPAGE_TOO_HIGH)
+    (asserts! (> amount-usdh-requested u0) ERR_BELOW_MIN)
+    (asserts! (> amount-asset-required u0) ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO)
     (asserts! (is-eq (unwrap-panic (get price-identifier decoded-price)) (get price-feed-id supported-asset-data)) ERR_PRICE_FEED_MISMATCH)
 
     (if (>= timestamp (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window)))
@@ -220,6 +223,8 @@
     (asserts! (is-eq (unwrap-panic (get price-identifier decoded-price)) (get price-feed-id supported-asset-data)) ERR_PRICE_FEED_MISMATCH)
     (asserts! (> timestamp block-timestamp) ERR_STALE_DATA)
     (asserts! (<= price-slippage-bps price-slippage-tolerance ) ERR_PRICE_SLIPPAGE_TOO_HIGH)
+    (asserts! (> amount-usdh-requested u0) ERR_BELOW_MIN)
+    (asserts! (> amount-asset-required u0) ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO)
 
     (try! (contract-call? .usdh-token burn-for-protocol amount-usdh-requested tx-sender))
     (try! (contract-call? .redeeming-reserve transfer amount-asset-required tx-sender redeeming-asset))
