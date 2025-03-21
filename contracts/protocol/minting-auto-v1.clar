@@ -156,7 +156,7 @@
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (get mint-enabled state) ERR_TRADING_DISABLED)
-    (asserts! (get minter (get-whitelist tx-sender minting-asset-contract)) ERR_NOT_WHITELISTED)
+    (asserts! (get minter (get-whitelist contract-caller minting-asset-contract)) ERR_NOT_WHITELISTED)
     (asserts! (check-is-supported-asset minting-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (> timestamp block-timestamp) ERR_STALE_DATA)
     (asserts! (<= slippage-bps slippage-tolerance ) ERR_SLIPPAGE_TOO_HIGH)
@@ -172,8 +172,8 @@
 
     (asserts! (<= amount-usdh-requested (get-current-mint-limit)) ERR_MINT_LIMIT_EXCEEDED)
 
-    (try! (contract-call? .usdh-token mint-for-protocol amount-usdh-requested tx-sender))
-    (try! (contract-call? minting-asset transfer amount-asset-required tx-sender (get-custody-address) memo))
+    (try! (contract-call? .usdh-token mint-for-protocol amount-usdh-requested contract-caller))
+    (try! (contract-call? minting-asset transfer amount-asset-required contract-caller (get-custody-address) memo))
 
     (print { price: price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, minting-asset: minting-asset-contract })
     (ok (var-set current-mint-limit (- (get-current-mint-limit) amount-usdh-requested)))
@@ -215,14 +215,14 @@
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (get redeem-enabled state) ERR_TRADING_DISABLED)
-    (asserts! (get redeemer (get-whitelist tx-sender redeeming-asset-contract)) ERR_NOT_WHITELISTED)
+    (asserts! (get redeemer (get-whitelist contract-caller redeeming-asset-contract)) ERR_NOT_WHITELISTED)
     (asserts! (check-is-supported-asset redeeming-asset-contract) ERR_NOT_SUPPORTED_ASSET)
     (asserts! (is-eq (unwrap-panic (get price-identifier decoded-price)) (get price-feed-id supported-asset-data)) ERR_PRICE_FEED_MISMATCH)
     (asserts! (> timestamp block-timestamp) ERR_STALE_DATA)
     (asserts! (<= slippage-bps slippage-tolerance ) ERR_SLIPPAGE_TOO_HIGH)
 
-    (try! (contract-call? .usdh-token burn-for-protocol amount-usdh-requested tx-sender))
-    (try! (contract-call? .redeeming-reserve transfer amount-asset-required tx-sender redeeming-asset))
+    (try! (contract-call? .usdh-token burn-for-protocol amount-usdh-requested contract-caller))
+    (try! (contract-call? .redeeming-reserve transfer amount-asset-required contract-caller redeeming-asset))
 
     (print { price: price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, redeeming-asset: redeeming-asset-contract })
     (ok (var-set current-mint-limit (- (get-current-mint-limit) amount-usdh-requested)))
@@ -235,21 +235,21 @@
 
 (define-public (set-mint-limit (new-mint-limit uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (<= new-mint-limit max-mint-limit) ERR_ABOVE_MAX)
     (ok (var-set mint-limit new-mint-limit)))
 )
 
 (define-public (set-mint-limit-reset-window (new-window uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (>= new-window min-mint-limit-reset-window) ERR_BELOW_MIN)
     (ok (var-set mint-limit-reset-window new-window)))
 )
 
 (define-public (set-block-delay (new-amount uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (<= new-amount max-block-delay) ERR_ABOVE_MAX)
     (asserts! (> new-amount u0) ERR_BELOW_MIN)
     (ok (var-set block-delay new-amount))
@@ -258,21 +258,21 @@
 
 (define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer }))
   )
 )
 
 (define-public (set-custody-address (new-custody-address principal))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (ok (var-set custody-address new-custody-address))
   )
 )
 
 (define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (token-base uint) (slippage uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (<= slippage max-slippage) ERR_ABOVE_MAX)
     (asserts! (is-eq token-base (pow u10 (unwrap-panic (contract-call? token get-decimals)))) ERR_TOKEN_BASE_MISMATCH)
     (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: slippage }))
