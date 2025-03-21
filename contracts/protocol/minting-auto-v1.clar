@@ -242,6 +242,7 @@
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-mint-limit max-mint-limit) ERR_ABOVE_MAX)
+    (print { old-value: (get-mint-limit), new-value: new-mint-limit })
     (ok (var-set mint-limit new-mint-limit)))
 )
 
@@ -249,6 +250,7 @@
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (>= new-window min-mint-limit-reset-window) ERR_BELOW_MIN)
+    (print { old-value: (get-mint-limit-reset-window), new-value: new-window })
     (ok (var-set mint-limit-reset-window new-window)))
 )
 
@@ -257,6 +259,7 @@
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-amount max-block-delay) ERR_ABOVE_MAX)
     (asserts! (> new-amount u0) ERR_BELOW_MIN)
+    (print { old-value: (get-block-delay), new-value: new-amount })
     (ok (var-set block-delay new-amount))
   )
 )
@@ -266,6 +269,7 @@
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
     (asserts! (is-standard asset) ERR_NOT_STANDARD_PRINCIPAL)
+    (print { address: address, asset: asset, old-values: (get-whitelist address asset),  new-values: { minter: minter, redeemer: redeemer } })
     (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer }))
   )
 )
@@ -274,14 +278,28 @@
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (is-standard new-custody-address) ERR_NOT_STANDARD_PRINCIPAL)
+    (print { old-value: (get-custody-address), new-value: new-custody-address })
     (ok (var-set custody-address new-custody-address))
   )
 )
 
 (define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (price-slippage uint))
-  (begin
+  (let (
+    (token-address (contract-of token))
+    (token-base (pow u10 (unwrap-panic (contract-call? token get-decimals))))
+  )
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= price-slippage max-price-slippage) ERR_ABOVE_MAX)
-    (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: (pow u10 (unwrap-panic (contract-call? token get-decimals))), price-slippage: price-slippage }))
+    (if (check-is-supported-asset token-address)
+      (print { 
+        contract: token-address, 
+        old-values: (some (unwrap-panic (get-supported-asset token-address))), 
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: price-slippage } })
+      (print { 
+        contract: token-address, 
+        old-values: none, 
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: price-slippage } })
+    )
+    (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage }))
   )
 )
