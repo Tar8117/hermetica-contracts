@@ -225,7 +225,7 @@
     (try! (contract-call? .redeeming-reserve transfer amount-asset-required tx-sender redeeming-asset))
 
     (print { price: price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, redeeming-asset: redeeming-asset-contract })
-    (ok (var-set current-mint-limit (- (get-current-mint-limit) amount-usdh-requested)))
+    (ok true)
   )
 )
 
