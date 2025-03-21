@@ -19,7 +19,6 @@
 (define-constant ERR_BELOW_MIN (err u2307))
 (define-constant ERR_NOT_WHITELISTED (err u2308))
 (define-constant ERR_SLIPPAGE_TOO_HIGH (err u2309))
-(define-constant ERR_TOKEN_BASE_MISMATCH (err u2310))
 
 (define-constant bps-base (pow u10 u4))
 (define-constant oracle-base (pow u10 u8))
@@ -270,11 +269,10 @@
   )
 )
 
-(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (token-base uint) (slippage uint))
+(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (slippage uint))
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= slippage max-slippage) ERR_ABOVE_MAX)
-    (asserts! (is-eq token-base (pow u10 (unwrap-panic (contract-call? token get-decimals)))) ERR_TOKEN_BASE_MISMATCH)
-    (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: slippage }))
+    (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: (pow u10 (unwrap-panic (contract-call? token get-decimals))), slippage: slippage }))
   )
 )
