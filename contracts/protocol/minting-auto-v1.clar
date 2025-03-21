@@ -25,7 +25,6 @@
 (define-constant ERR_ORACLE_CONF_TOO_LOW (err u2314))
 
 (define-constant bps-base (pow u10 u4))
-(define-constant oracle-base (pow u10 u8))
 (define-constant usdh-base (pow u10 u8))
 
 (define-constant max-price-slippage u1000)
@@ -154,14 +153,15 @@
     (decoded-data
       (match price-feed-bytes value
         (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds value execution-plan)) u0)
-        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: 0, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
+        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: -8, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )
+    (decoded-price-base (pow u10 (to-uint (* -1 (unwrap-panic (get expo decoded-data))))))
     (decoded-price (to-uint (unwrap-panic (get price decoded-data))))
     (decoded-price-conf (unwrap-panic (get conf decoded-data)))
     (timestamp (unwrap-panic (get publish-time decoded-data)))
     (slippage-amount (/ (* decoded-price price-slippage-bps) bps-base))
-    (amount-asset-required (/ (* amount-usdh-requested oracle-base token-base) (- decoded-price slippage-amount) usdh-base))
+    (amount-asset-required (/ (* amount-usdh-requested decoded-price-base token-base) (- decoded-price slippage-amount) usdh-base))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (get mint-enabled state) ERR_TRADING_DISABLED)
@@ -218,14 +218,15 @@
     (decoded-data
       (match price-feed-bytes value
         (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds value execution-plan)) u0)
-        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: 0, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
+        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: -8, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )
+    (decoded-price-base (pow u10 (to-uint (* -1 (unwrap-panic (get expo decoded-data))))))
     (decoded-price (to-uint (unwrap-panic (get price decoded-data))))
     (decoded-price-conf (unwrap-panic (get conf decoded-data)))
     (timestamp (unwrap-panic (get publish-time decoded-data)))
     (slippage-amount (/ (* decoded-price price-slippage-bps) bps-base))
-    (amount-asset-required (/ (* amount-usdh-requested oracle-base token-base) (+ decoded-price slippage-amount) usdh-base))
+    (amount-asset-required (/ (* amount-usdh-requested decoded-price-base token-base) (+ decoded-price slippage-amount) usdh-base))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (get redeem-enabled state) ERR_TRADING_DISABLED)
