@@ -19,8 +19,8 @@
 (define-constant ERR_BELOW_MIN (err u2307))
 (define-constant ERR_NOT_WHITELISTED (err u2308))
 (define-constant ERR_PRICE_SLIPPAGE_TOO_HIGH (err u2309))
-(define-constant ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO (err u2310))
-(define-constant ERR_NOT_STANDARD_PRINCIPAL (err u2311))
+(define-constant ERR_NOT_STANDARD_PRINCIPAL (err u2310))
+(define-constant ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO (err u2311))
 (define-constant ERR_MAX_CONF_TOO_HIGH (err u2312))
 (define-constant ERR_ORACLE_CONF_TOO_LOW (err u2313))
 
@@ -308,11 +308,11 @@
       (print { 
         contract: token-address, 
         old-values: (some (unwrap-panic (get-supported-asset token-address))), 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: price-slippage } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage } })
       (print { 
         contract: token-address, 
         old-values: none, 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: price-slippage } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage } })
     )
     (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps }))
   )
