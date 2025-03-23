@@ -308,11 +308,11 @@
       (print { 
         contract: token-address, 
         old-values: (some (unwrap-panic (get-supported-asset token-address))), 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps } })
       (print { 
         contract: token-address, 
         old-values: none, 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps } })
     )
     (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps }))
   )
