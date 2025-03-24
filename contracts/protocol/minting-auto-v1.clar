@@ -2,9 +2,9 @@
 ;; @version 1
 
 (use-trait sip-010-trait .sip-010-trait.sip-010-trait)
-(use-trait pyth-storage-trait 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-traits-v1.storage-trait)
-(use-trait pyth-decoder-trait 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-traits-v1.decoder-trait)
-(use-trait wormhole-core-trait 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.wormhole-traits-v1.core-trait)
+(use-trait pyth-storage-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-traits-v1.storage-trait)
+(use-trait pyth-decoder-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-traits-v1.decoder-trait)
+(use-trait wormhole-core-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.wormhole-traits-v1.core-trait)
 
 ;;-------------------------------------
 ;; Constants
@@ -18,14 +18,16 @@
 (define-constant ERR_ABOVE_MAX (err u2306))
 (define-constant ERR_BELOW_MIN (err u2307))
 (define-constant ERR_NOT_WHITELISTED (err u2308))
-(define-constant ERR_SLIPPAGE_TOO_HIGH (err u2309))
-(define-constant ERR_TOKEN_BASE_MISMATCH (err u2310))
+(define-constant ERR_PRICE_SLIPPAGE_TOO_HIGH (err u2309))
+(define-constant ERR_NOT_STANDARD_PRINCIPAL (err u2310))
+(define-constant ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO (err u2311))
+(define-constant ERR_MAX_CONF_TOO_HIGH (err u2312))
+(define-constant ERR_ORACLE_CONF_TOO_LOW (err u2313))
 
 (define-constant bps-base (pow u10 u4))
-(define-constant oracle-base (pow u10 u8))
 (define-constant usdh-base (pow u10 u8))
 
-(define-constant max-slippage u1000)
+(define-constant max-price-slippage u1000)
 (define-constant max-block-delay u10)
 (define-constant max-mint-limit (* u1000000 usdh-base))
 (define-constant min-mint-limit-reset-window u1200)
@@ -65,7 +67,8 @@
     active: bool,
     price-feed-id: (buff 32),
     token-base: uint,
-    slippage: uint,
+    price-slippage: uint,
+    conf-tolerance-bps: uint
   }
 )
 
@@ -121,6 +124,9 @@
   )
 )
 
+(define-private (check-confidence (price uint) (conf uint) (conf-tolerance-bps uint))
+  (ok (asserts! (or (is-eq u0 price) (<= conf (/ (* price conf-tolerance-bps) bps-base))) ERR_ORACLE_CONF_TOO_LOW)))
+
 ;;-------------------------------------
 ;; Minter
 ;;-------------------------------------
@@ -128,7 +134,7 @@
 (define-public (mint
   (minting-asset <sip-010-trait>)
   (amount-usdh-requested uint)
-  (slippage-tolerance uint)
+  (price-slippage-tolerance uint)
   (memo (optional (buff 34)))
   (price-feed-bytes (optional (buff 8192)))
   (execution-plan {
@@ -140,27 +146,33 @@
     (minting-asset-contract (contract-of minting-asset))
     (supported-asset-data (try! (get-supported-asset minting-asset-contract)))
     (token-base (get token-base supported-asset-data))
-    (slippage-bps (get slippage supported-asset-data))
+    (price-slippage-bps (get price-slippage supported-asset-data))
+    (conf-tolerance-bps (get conf-tolerance-bps supported-asset-data))
     (state (contract-call? .minting-state get-confirm-mint-state))
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (var-get block-delay)))))
-    (decoded-price
+    (decoded-data
       (match price-feed-bytes value
-        (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds value execution-plan)) u0)
-        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: 0, prev-publish-time: u0, price: (to-int oracle-base), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
+        (element-at (try! (contract-call? 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3 decode-price-feeds value execution-plan)) u0)
+        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: -8, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )
-    (price (to-uint (unwrap-panic (get price decoded-price))))
-    (timestamp (unwrap-panic (get publish-time decoded-price)))
-    (slippage-amount (/ (* price slippage-bps) bps-base))
-    (amount-asset-required (/ (* amount-usdh-requested oracle-base token-base) (- price slippage-amount) usdh-base))
+    (decoded-price-base (pow u10 (to-uint (* -1 (unwrap-panic (get expo decoded-data))))))
+    (decoded-price (to-uint (unwrap-panic (get price decoded-data))))
+    (decoded-price-conf (unwrap-panic (get conf decoded-data)))
+    (timestamp (unwrap-panic (get publish-time decoded-data)))
+    (slippage-amount (/ (* decoded-price price-slippage-bps) bps-base))
+    (amount-asset-required (/ (* amount-usdh-requested decoded-price-base token-base) (- decoded-price slippage-amount) usdh-base))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (get mint-enabled state) ERR_TRADING_DISABLED)
-    (asserts! (get minter (get-whitelist tx-sender minting-asset-contract)) ERR_NOT_WHITELISTED)
+    (asserts! (get minter (get-whitelist contract-caller minting-asset-contract)) ERR_NOT_WHITELISTED)
     (asserts! (check-is-supported-asset minting-asset-contract) ERR_NOT_SUPPORTED_ASSET)
+    (try! (check-confidence decoded-price decoded-price-conf conf-tolerance-bps))
     (asserts! (> timestamp block-timestamp) ERR_STALE_DATA)
-    (asserts! (<= slippage-bps slippage-tolerance ) ERR_SLIPPAGE_TOO_HIGH)
-    (asserts! (is-eq (unwrap-panic (get price-identifier decoded-price)) (get price-feed-id supported-asset-data)) ERR_PRICE_FEED_MISMATCH)
+    (asserts! (<= price-slippage-bps price-slippage-tolerance ) ERR_PRICE_SLIPPAGE_TOO_HIGH)
+    (asserts! (> amount-usdh-requested u0) ERR_BELOW_MIN)
+    (asserts! (> amount-asset-required u0) ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO)
+    (asserts! (is-eq (unwrap-panic (get price-identifier decoded-data)) (get price-feed-id supported-asset-data)) ERR_PRICE_FEED_MISMATCH)
 
     (if (>= timestamp (+ (get-last-mint-limit-reset) (get-mint-limit-reset-window)))
       (begin
@@ -172,22 +184,22 @@
 
     (asserts! (<= amount-usdh-requested (get-current-mint-limit)) ERR_MINT_LIMIT_EXCEEDED)
 
-    (try! (contract-call? .usdh-token mint-for-protocol amount-usdh-requested tx-sender))
-    (try! (contract-call? minting-asset transfer amount-asset-required tx-sender (get-custody-address) memo))
+    (try! (contract-call? .usdh-token mint-for-protocol amount-usdh-requested contract-caller))
+    (try! (contract-call? minting-asset transfer amount-asset-required contract-caller (get-custody-address) memo))
 
-    (print { price: price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, minting-asset: minting-asset-contract })
+    (print { price: decoded-price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, minting-asset: minting-asset-contract })
     (ok (var-set current-mint-limit (- (get-current-mint-limit) amount-usdh-requested)))
   )
 )
 
 ;;-------------------------------------
-;; Redemer
+;; Redeemer
 ;;-------------------------------------
 
 (define-public (redeem
   (redeeming-asset <sip-010-trait>)
   (amount-usdh-requested uint)
-  (slippage-tolerance uint)
+  (price-slippage-tolerance uint)
   (memo (optional (buff 34)))
   (price-feed-bytes (optional (buff 8192)))
   (execution-plan {
@@ -199,33 +211,39 @@
     (redeeming-asset-contract (contract-of redeeming-asset))
     (supported-asset-data (try! (get-supported-asset redeeming-asset-contract)))
     (token-base (get token-base supported-asset-data))
+    (price-slippage-bps (get price-slippage supported-asset-data))
+    (conf-tolerance-bps (get conf-tolerance-bps supported-asset-data))
     (state (contract-call? .minting-state get-confirm-redeem-state))
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (var-get block-delay)))))
-    (decoded-price
+    (decoded-data
       (match price-feed-bytes value
-        (element-at (try! (contract-call? 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2 decode-price-feeds value execution-plan)) u0)
-        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: 0, prev-publish-time: u0, price: (to-int oracle-base), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
+        (element-at (try! (contract-call? 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3 decode-price-feeds value execution-plan)) u0)
+        (some { conf: u0, ema-conf: u0, ema-price: 0, expo: -8, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )
-    (price (to-uint (unwrap-panic (get price decoded-price))))
-    (timestamp (unwrap-panic (get publish-time decoded-price)))
-    (slippage-bps (get slippage supported-asset-data))
-    (slippage-amount (/ (* price slippage-bps) bps-base))
-    (amount-asset-required (/ (* amount-usdh-requested oracle-base token-base) (+ price slippage-amount) usdh-base))
+    (decoded-price-base (pow u10 (to-uint (* -1 (unwrap-panic (get expo decoded-data))))))
+    (decoded-price (to-uint (unwrap-panic (get price decoded-data))))
+    (decoded-price-conf (unwrap-panic (get conf decoded-data)))
+    (timestamp (unwrap-panic (get publish-time decoded-data)))
+    (slippage-amount (/ (* decoded-price price-slippage-bps) bps-base))
+    (amount-asset-required (/ (* amount-usdh-requested decoded-price-base token-base) (+ decoded-price slippage-amount) usdh-base))
   )
     (try! (contract-call? .hq check-is-enabled))
     (asserts! (get redeem-enabled state) ERR_TRADING_DISABLED)
-    (asserts! (get redeemer (get-whitelist tx-sender redeeming-asset-contract)) ERR_NOT_WHITELISTED)
+    (asserts! (get redeemer (get-whitelist contract-caller redeeming-asset-contract)) ERR_NOT_WHITELISTED)
     (asserts! (check-is-supported-asset redeeming-asset-contract) ERR_NOT_SUPPORTED_ASSET)
-    (asserts! (is-eq (unwrap-panic (get price-identifier decoded-price)) (get price-feed-id supported-asset-data)) ERR_PRICE_FEED_MISMATCH)
+    (asserts! (is-eq (unwrap-panic (get price-identifier decoded-data)) (get price-feed-id supported-asset-data)) ERR_PRICE_FEED_MISMATCH)
+    (try! (check-confidence decoded-price decoded-price-conf conf-tolerance-bps))
     (asserts! (> timestamp block-timestamp) ERR_STALE_DATA)
-    (asserts! (<= slippage-bps slippage-tolerance ) ERR_SLIPPAGE_TOO_HIGH)
+    (asserts! (<= price-slippage-bps price-slippage-tolerance ) ERR_PRICE_SLIPPAGE_TOO_HIGH)
+    (asserts! (> amount-usdh-requested u0) ERR_BELOW_MIN)
+    (asserts! (> amount-asset-required u0) ERR_AMOUNT_ASSET_REQUIRED_IS_ZERO)
 
-    (try! (contract-call? .usdh-token burn-for-protocol amount-usdh-requested tx-sender))
-    (try! (contract-call? .redeeming-reserve transfer amount-asset-required tx-sender redeeming-asset))
+    (try! (contract-call? .usdh-token burn-for-protocol amount-usdh-requested contract-caller))
+    (try! (contract-call? .redeeming-reserve transfer amount-asset-required contract-caller redeeming-asset memo))
 
-    (print { price: price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, redeeming-asset: redeeming-asset-contract })
-    (ok (var-set current-mint-limit (- (get-current-mint-limit) amount-usdh-requested)))
+    (print { price: decoded-price, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, redeeming-asset: redeeming-asset-contract })
+    (ok true)
   )
 )
 
@@ -235,46 +253,67 @@
 
 (define-public (set-mint-limit (new-mint-limit uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (<= new-mint-limit max-mint-limit) ERR_ABOVE_MAX)
+    (print { old-value: (get-mint-limit), new-value: new-mint-limit })
     (ok (var-set mint-limit new-mint-limit)))
 )
 
 (define-public (set-mint-limit-reset-window (new-window uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (>= new-window min-mint-limit-reset-window) ERR_BELOW_MIN)
+    (print { old-value: (get-mint-limit-reset-window), new-value: new-window })
     (ok (var-set mint-limit-reset-window new-window)))
 )
 
 (define-public (set-block-delay (new-amount uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (<= new-amount max-block-delay) ERR_ABOVE_MAX)
     (asserts! (> new-amount u0) ERR_BELOW_MIN)
+    (print { old-value: (get-block-delay), new-value: new-amount })
     (ok (var-set block-delay new-amount))
   )
 )
 
 (define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
+    (asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
+    (asserts! (is-standard asset) ERR_NOT_STANDARD_PRINCIPAL)
+    (print { address: address, asset: asset, old-values: (get-whitelist address asset),  new-values: { minter: minter, redeemer: redeemer } })
     (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer }))
   )
 )
 
 (define-public (set-custody-address (new-custody-address principal))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-protocol contract-caller))
+    (asserts! (is-standard new-custody-address) ERR_NOT_STANDARD_PRINCIPAL)
+    (print { old-value: (get-custody-address), new-value: new-custody-address })
     (ok (var-set custody-address new-custody-address))
   )
 )
 
-(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (token-base uint) (slippage uint))
-  (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
-    (asserts! (<= slippage max-slippage) ERR_ABOVE_MAX)
-    (asserts! (is-eq token-base (pow u10 (unwrap-panic (contract-call? token get-decimals)))) ERR_TOKEN_BASE_MISMATCH)
-    (ok (map-set supported-assets { contract: (contract-of token) } { active: active, price-feed-id: price-feed-id, token-base: token-base, slippage: slippage }))
+(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (price-slippage uint) (conf-tolerance-bps uint))
+  (let (
+    (token-address (contract-of token))
+    (token-base (pow u10 (unwrap-panic (contract-call? token get-decimals))))
+  )
+    (try! (contract-call? .hq check-is-protocol contract-caller))
+    (asserts! (<= price-slippage max-price-slippage) ERR_ABOVE_MAX)
+    (asserts! (<= conf-tolerance-bps bps-base) ERR_MAX_CONF_TOO_HIGH)
+    (if (check-is-supported-asset token-address)
+      (print { 
+        contract: token-address, 
+        old-values: (some (unwrap-panic (get-supported-asset token-address))), 
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps } })
+      (print { 
+        contract: token-address, 
+        old-values: none, 
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps } })
+    )
+    (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps }))
   )
 )

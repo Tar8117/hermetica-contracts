@@ -401,7 +401,7 @@
   )
 )
 
-(define-public (confirm-redeem (request-id uint) (price uint) (amount-usdh-confirmed uint) (redeeming-asset <sip-010-trait>))
+(define-public (confirm-redeem (request-id uint) (price uint) (amount-usdh-confirmed uint) (redeeming-asset <sip-010-trait>) (memo (optional (buff 34))))
   (let (
     (redeem-request (try! (get-redeem-request request-id)))
     (price-requested (get price redeem-request))
@@ -425,8 +425,8 @@
     (asserts! (<= amount-usdh-confirmed amount-usdh-requested) ERR_AMOUNT_NOT_ALLOWED)
     (asserts! (<= price (+ price-requested slippage-tolerance)) ERR_SLIPPAGE_TOO_HIGH)
 
-    (try! (contract-call? .redeeming-reserve transfer amount-asset-confirmed requester redeeming-asset))
-    (if (> amount-asset-fee u0) (try! (contract-call? .redeeming-reserve transfer amount-asset-fee fee-address redeeming-asset)) true)
+    (try! (contract-call? .redeeming-reserve transfer amount-asset-confirmed requester redeeming-asset memo))
+    (if (> amount-asset-fee u0) (try! (contract-call? .redeeming-reserve transfer amount-asset-fee fee-address redeeming-asset memo)) true)
     (try! (contract-call? .usdh-token burn-for-protocol (- amount-usdh-confirmed amount-usdh-fee) this-contract))
     (if (> amount-usdh-fee u0) (try! (contract-call? .usdh-token transfer amount-usdh-fee this-contract fee-address none)) true)
     (if (not (is-eq amount-usdh-requested amount-usdh-confirmed))
