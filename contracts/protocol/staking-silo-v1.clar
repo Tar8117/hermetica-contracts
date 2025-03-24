@@ -1,8 +1,8 @@
 ;; @contract Staking Silo
-;; @version 0.1
+;; @version 1
 
 ;;-------------------------------------
-;; Constants 
+;; Constants
 ;;-------------------------------------
 
 (define-constant ERR_NO_CLAIM_FOR_ID (err u4001))
@@ -10,42 +10,41 @@
 (define-constant ERR_ONLY_STAKING_CONTRACT (err u4003))
 (define-constant ERR_ABOVE_MAX (err u4004))
 
-(define-constant staker-silo (as-contract tx-sender))
 (define-constant max-cooldown-window u4320)
 
 ;;-------------------------------------
 ;; Variables
 ;;-------------------------------------
 
-(define-data-var cooldown-window uint u1008) ;; burn-block-height
+(define-data-var cooldown-window uint u1008)
 
 (define-data-var current-claim-id uint u0)
 
 ;;-------------------------------------
-;; Maps 
+;; Maps
 ;;-------------------------------------
 
 (define-map claims
   { 
-    claim-id: uint 
+    claim-id: uint
   }
   {
     recipient: principal,
-    amount: uint,                 ;; USDh
-    claim-block-height: uint,     ;; burn-block-height
+    amount: uint,
+    claim-block-height: uint,
   }
 )
 
 
 ;;-------------------------------------
-;; Getters 
+;; Getters
 ;;-------------------------------------
 
-(define-read-only (get-cooldown-window) 
+(define-read-only (get-cooldown-window)
   (var-get cooldown-window)
 )
 
-(define-read-only (get-current-claim-id) 
+(define-read-only (get-current-claim-id)
   (var-get current-claim-id)
 )
 
@@ -54,7 +53,7 @@
 )
 
 ;;-------------------------------------
-;; User  
+;; User
 ;;-------------------------------------
 
 (define-public (claim-many (entries (list 1000 uint)))
@@ -65,9 +64,8 @@
     (current-claim (try! (get-claim claim-id)))
   )
     (asserts! (>= burn-block-height (+ (get claim-block-height current-claim) (get-cooldown-window))) ERR_NOT_COOLED_DOWN)
-    (try! (as-contract (contract-call? .usdh-token transfer (get amount current-claim) tx-sender (get recipient current-claim) none)))
-    (map-delete claims { claim-id: claim-id })
-    (ok true)
+    (try! (contract-call? .usdh-token transfer (get amount current-claim) (as-contract tx-sender) (get recipient current-claim) none))
+    (ok (map-delete claims { claim-id: claim-id }))
   )
 )
 
@@ -79,12 +77,11 @@
   (let (
     (next-claim-id (+ (get-current-claim-id) u1))
   )
-    (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (is-eq contract-caller .staking) ERR_ONLY_STAKING_CONTRACT)
     (map-set claims { claim-id: next-claim-id } 
-      {   
+      {
         recipient: recipient,
-        amount: amount,                                 ;; USDh
+        amount: amount,
         claim-block-height: burn-block-height,
       }
     )
@@ -102,7 +99,6 @@
   (begin
     (try! (contract-call? .hq check-is-protocol tx-sender))
     (asserts! (<= new-window max-cooldown-window ) ERR_ABOVE_MAX)
-    (var-set cooldown-window new-window)
-    (ok true)
+    (ok (var-set cooldown-window new-window))
   )
 )

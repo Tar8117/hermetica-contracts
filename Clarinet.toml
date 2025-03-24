@@ -29,8 +29,13 @@ epoch = 2.5
 
 [contracts.minting]
 path = 'contracts/protocol/minting-v1.clar'
-clarity_version = 2
-epoch = 2.5
+clarity_version = 3
+epoch = 3.0
+
+[contracts.minting-auto]
+path = 'contracts/protocol/minting-auto-v1.clar'
+clarity_version = 3
+epoch = 3.0
 
 [contracts.redeeming-reserve]
 path = 'contracts/protocol/redeeming-reserve-v1.clar'
@@ -57,8 +62,8 @@ path = 'contracts/protocol/blacklist-susdh-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
-[contracts.recover]
-path = 'contracts/protocol/recover-v1.clar'
+[contracts.emergency-recover]
+path = 'contracts/protocol/emergency-recover-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
