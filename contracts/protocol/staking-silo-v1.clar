@@ -7,7 +7,8 @@
 
 (define-constant ERR_NO_CLAIM_FOR_ID (err u4001))
 (define-constant ERR_NOT_COOLED_DOWN (err u4002))
-(define-constant ERR_ABOVE_MAX (err u4003))
+(define-constant ERR_ONLY_STAKING_CONTRACT (err u4003))
+(define-constant ERR_ABOVE_MAX (err u4004))
 
 (define-constant staker-silo (as-contract tx-sender))
 (define-constant max-cooldown-window u4320)
@@ -79,6 +80,7 @@
     (next-claim-id (+ (get-current-claim-id) u1))
   )
     (try! (contract-call? .hq check-is-protocol contract-caller))
+    (asserts! (is-eq contract-caller .staking) ERR_ONLY_STAKING_CONTRACT)
     (map-set claims { claim-id: next-claim-id } 
       {   
         recipient: recipient,

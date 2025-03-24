@@ -72,7 +72,7 @@
 ;; Mint method
 (define-public (mint-for-protocol (amount uint) (recipient principal))
   (begin
-    (try! (contract-call? .hq check-is-minter contract-caller))
+    (try! (contract-call? .hq check-is-minting-contract contract-caller))
     (ft-mint? usdh amount recipient)
   )
 )
@@ -80,14 +80,12 @@
 ;; Burn method
 (define-public (burn-for-protocol (amount uint) (sender principal))
   (begin
-    (try! (contract-call? .hq check-is-minter contract-caller))
+    (try! (contract-call? .hq check-is-minting-contract contract-caller))
     (ft-burn? usdh amount sender)
   )
 )
 
 ;; Burn external
 (define-public (burn (amount uint))
-  (begin
-    (ft-burn? usdh amount tx-sender)
-  )
+  (ft-burn? usdh amount tx-sender)
 )
