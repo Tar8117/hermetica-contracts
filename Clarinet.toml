@@ -42,11 +42,6 @@ path = 'contracts/protocol/redeeming-reserve-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
-[contracts.sip-010-trait]
-path = 'contracts/traits/sip-010-trait.clar'
-clarity_version = 2
-epoch = 2.5
-
 [contracts.staking]
 path = 'contracts/protocol/staking-v1.clar'
 clarity_version = 2
@@ -76,6 +71,23 @@ epoch = 2.5
 
 [contracts.usdh-token]
 path = 'contracts/tokens/usdh-token-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+# traits
+
+[contracts.sip-010-trait]
+path = 'contracts/traits/sip-010-trait.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.token-migration-trait]
+path = 'contracts/traits/token-migration-trait-v1.clar'
+clarity_version = 2
+epoch = 2.5
+
+[contracts.interim-token-trait]
+path = 'contracts/traits/interim-token-trait-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
