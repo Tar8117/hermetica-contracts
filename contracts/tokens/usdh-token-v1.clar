@@ -1,18 +1,25 @@
 (impl-trait .sip-010-trait.sip-010-trait)
+(impl-trait .interim-token-trait.interim-token-trait)
+(use-trait token-migration-trait .token-migration-trait.token-migration-trait)
 
-;; Defines the USDh token according to the SIP010 Standard
 (define-fungible-token usdh)
 
-(define-constant ERR_NOT_AUTHORIZED u1401)
+(define-constant ERR_NOT_AUTHORIZED (err u1401))
+(define-constant ERR_DEPRECATED_TOKEN (err u1402))
+(define-constant ERR_NOT_MIGRATION_MANAGER (err u1403))
 
 ;;-------------------------------------
-;; Variables
+;; Const and vars
 ;;-------------------------------------
 
 (define-data-var token-uri (string-utf8 256) u"")
+(define-data-var token-name (string-ascii 32) "Hermetica USDh")
+
+(define-data-var migration-start-height uint u0)
+(define-data-var migration-manager (optional principal) none)
 
 ;;-------------------------------------
-;; SIP-010 
+;; SIP-010
 ;;-------------------------------------
 
 (define-read-only (get-total-supply)
@@ -20,7 +27,7 @@
 )
 
 (define-read-only (get-name)
-  (ok "Hermetica USDh Token")
+  (ok (var-get token-name))
 )
 
 (define-read-only (get-symbol)
@@ -41,7 +48,8 @@
 
 (define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
   (begin
-    (asserts! (is-eq tx-sender sender) (err ERR_NOT_AUTHORIZED))
+    (try! (is-not-migrated))
+    (asserts! (or (is-eq sender tx-sender) (is-eq sender contract-caller)) ERR_NOT_AUTHORIZED)
 
     (match (ft-transfer? usdh amount sender recipient)
       response (begin
@@ -60,8 +68,15 @@
 
 (define-public (set-token-uri (value (string-utf8 256)))
   (begin
-    (try! (contract-call? .hq check-is-admin tx-sender))
+    (try! (contract-call? .hq check-is-protocol tx-sender))
     (ok (var-set token-uri value))
+  )
+)
+
+(define-public (set-token-name (name (string-ascii 32)))
+  (begin
+    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (ok (var-set token-name name))
   )
 )
 
@@ -69,23 +84,49 @@
 ;; Mint / Burn
 ;;-------------------------------------
 
-;; Mint method
 (define-public (mint-for-protocol (amount uint) (recipient principal))
   (begin
+    (try! (is-not-migrated))
     (try! (contract-call? .hq check-is-minting-contract contract-caller))
     (ft-mint? usdh amount recipient)
   )
 )
 
-;; Burn method
 (define-public (burn-for-protocol (amount uint) (sender principal))
   (begin
+    (try! (is-not-migrated))
     (try! (contract-call? .hq check-is-minting-contract contract-caller))
     (ft-burn? usdh amount sender)
   )
 )
 
-;; Burn external
 (define-public (burn (amount uint))
   (ft-burn? usdh amount tx-sender)
+)
+
+;;-------------------------------------
+;; Migration
+;;-------------------------------------
+
+(define-read-only (is-not-migrated)
+	(ok (asserts! (is-eq u0 (var-get migration-start-height)) ERR_DEPRECATED_TOKEN))
+)
+
+(define-public (start-migration (manager <token-migration-trait>))
+	(begin
+		(try! (is-not-migrated))
+		(try! (contract-call? .hq check-is-owner contract-caller))
+		(var-set migration-start-height burn-block-height)
+		(var-set migration-manager (some (contract-of manager)))
+		(contract-call? manager start-migration burn-block-height (ft-get-supply usdh))
+	)
+)
+
+(define-public (migrate-balance (who principal))
+	(let ((balance (ft-get-balance usdh who)))
+		(asserts! (is-eq (var-get migration-manager) (some contract-caller)) ERR_NOT_MIGRATION_MANAGER)
+		(asserts! (> balance u0) (ok u0))
+		(try! (ft-burn? usdh balance who))
+		(ok balance)
+	)
 )
