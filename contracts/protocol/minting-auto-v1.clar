@@ -53,7 +53,8 @@
   {
     minter: bool,
     redeemer: bool,
-    block-delay: uint
+    block-delay: uint,
+    price-slippage: uint
   }
 )
 
@@ -65,7 +66,6 @@
     active: bool,
     price-feed-id: (buff 32),
     token-base: uint,
-    price-slippage: uint,
     conf-tolerance-bps: uint,
     custody-address: principal
   }
@@ -77,7 +77,7 @@
 
 (define-read-only (get-whitelist (address principal) (asset principal))
   (default-to 
-    { minter: false, redeemer: false, block-delay: u2 }
+    { minter: false, redeemer: false, block-delay: u2, price-slippage: u0 }
     (map-get? whitelist { address: address, asset: asset })
   )
 )
@@ -138,8 +138,8 @@
     (whitelist-data (get-whitelist contract-caller minting-asset-contract))
     (supported-asset-data (try! (get-supported-asset minting-asset-contract)))
     (token-base (get token-base supported-asset-data))
-    (price-slippage-bps (get price-slippage supported-asset-data))
     (conf-tolerance-bps (get conf-tolerance-bps supported-asset-data))
+    (price-slippage-bps (get price-slippage whitelist-data))
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (get block-delay whitelist-data)))))
     (decoded-data
       (match price-feed-bytes value
@@ -203,8 +203,8 @@
     (whitelist-data (get-whitelist contract-caller redeeming-asset-contract))
     (supported-asset-data (try! (get-supported-asset redeeming-asset-contract)))
     (token-base (get token-base supported-asset-data))
-    (price-slippage-bps (get price-slippage supported-asset-data))
     (conf-tolerance-bps (get conf-tolerance-bps supported-asset-data))
+    (price-slippage-bps (get price-slippage whitelist-data))
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (get block-delay whitelist-data)))))
     (decoded-data
       (match price-feed-bytes value
@@ -258,37 +258,37 @@
     (ok (var-set mint-limit-reset-window new-window)))
 )
 
-(define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool) (block-delay uint))
+(define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool) (block-delay uint) (price-slippage uint))
   (begin
     (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
     (asserts! (is-standard asset) ERR_NOT_STANDARD_PRINCIPAL)
     (asserts! (<= block-delay max-block-delay) ERR_ABOVE_MAX)
     (asserts! (> block-delay u0) ERR_BELOW_MIN)
-    (print { address: address, asset: asset, old-values: (get-whitelist address asset),  new-values: { minter: minter, redeemer: redeemer, block-delay: block-delay } })
-    (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer, block-delay: block-delay }))
+    (asserts! (<= price-slippage max-price-slippage) ERR_ABOVE_MAX)
+    (print { address: address, asset: asset, old-values: (get-whitelist address asset),  new-values: { minter: minter, redeemer: redeemer, block-delay: block-delay, price-slippage: price-slippage } })
+    (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer, block-delay: block-delay, price-slippage: price-slippage }))
   )
 )
 
-(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (price-slippage uint) (conf-tolerance-bps uint) (custody-address principal))
+(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (conf-tolerance-bps uint) (custody-address principal))
   (let (
     (token-address (contract-of token))
     (token-base (pow u10 (unwrap-panic (contract-call? token get-decimals))))
   )
     (try! (contract-call? .hq check-is-protocol contract-caller))
-    (asserts! (<= price-slippage max-price-slippage) ERR_ABOVE_MAX)
     (asserts! (<= conf-tolerance-bps bps-base) ERR_MAX_CONF_TOO_HIGH)
     (asserts! (is-standard custody-address) ERR_NOT_STANDARD_PRINCIPAL)
     (if (check-is-supported-asset token-address)
       (print { 
         contract: token-address, 
         old-values: (some (unwrap-panic (get-supported-asset token-address))), 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address } })
       (print { 
         contract: token-address, 
         old-values: none, 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address } })
     )
-    (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, price-slippage: price-slippage, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address }))
+    (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address }))
   )
 )
