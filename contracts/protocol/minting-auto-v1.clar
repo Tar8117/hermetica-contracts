@@ -54,7 +54,8 @@
     minter: bool,
     redeemer: bool,
     block-delay: uint,
-    price-slippage: uint
+    price-slippage: uint,
+    custody-address: (optional principal)
   }
 )
 
@@ -66,8 +67,7 @@
     active: bool,
     price-feed-id: (buff 32),
     token-base: uint,
-    conf-tolerance-bps: uint,
-    custody-address: principal
+    conf-tolerance-bps: uint
   }
 )
 
@@ -77,7 +77,7 @@
 
 (define-read-only (get-whitelist (address principal) (asset principal))
   (default-to 
-    { minter: false, redeemer: false, block-delay: u2, price-slippage: u0 }
+    { minter: false, redeemer: false, block-delay: u2, price-slippage: u0, custody-address: none }
     (map-get? whitelist { address: address, asset: asset })
   )
 )
@@ -176,7 +176,7 @@
     (asserts! (<= amount-usdh-requested (get-current-mint-limit)) ERR_MINT_LIMIT_EXCEEDED)
 
     (try! (contract-call? .usdh-token mint-for-protocol amount-usdh-requested contract-caller))
-    (try! (contract-call? minting-asset transfer amount-asset-required contract-caller (get custody-address supported-asset-data) memo))
+    (try! (contract-call? minting-asset transfer amount-asset-required contract-caller (unwrap-panic (get custody-address whitelist-data)) memo))
 
     (print { price: decoded-price, price-conf: decoded-price-conf, oracle-timestamp: timestamp, amount-usdh-requested: amount-usdh-requested, amount-asset-required: amount-asset-required, slippage-amount: slippage-amount, minting-asset: minting-asset-contract, conf-tolerance-bps: conf-tolerance-bps })
     (ok (var-set current-mint-limit (- (get-current-mint-limit) amount-usdh-requested)))
@@ -258,37 +258,38 @@
     (ok (var-set mint-limit-reset-window new-window)))
 )
 
-(define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool) (block-delay uint) (price-slippage uint))
+(define-public (set-whitelist (address principal) (asset principal) (minter bool) (redeemer bool) (block-delay uint) (price-slippage uint) (custody-address principal))
   (begin
     (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
     (asserts! (is-standard asset) ERR_NOT_STANDARD_PRINCIPAL)
+    (asserts! (is-standard custody-address) ERR_NOT_STANDARD_PRINCIPAL)
     (asserts! (<= block-delay max-block-delay) ERR_ABOVE_MAX)
     (asserts! (> block-delay u0) ERR_BELOW_MIN)
     (asserts! (<= price-slippage max-price-slippage) ERR_ABOVE_MAX)
-    (print { address: address, asset: asset, old-values: (get-whitelist address asset),  new-values: { minter: minter, redeemer: redeemer, block-delay: block-delay, price-slippage: price-slippage } })
-    (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer, block-delay: block-delay, price-slippage: price-slippage }))
+    (print { address: address, asset: asset, old-values: (get-whitelist address asset),  new-values: { minter: minter, redeemer: redeemer, block-delay: block-delay, price-slippage: price-slippage, custody-address: (some custody-address) } })
+    (ok (map-set whitelist { address: address, asset: asset } { minter: minter, redeemer: redeemer, block-delay: block-delay, price-slippage: price-slippage, custody-address: (some custody-address) }))
   )
 )
 
-(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (conf-tolerance-bps uint) (custody-address principal))
+(define-public (set-supported-asset (token <sip-010-trait>) (active bool) (price-feed-id (buff 32)) (conf-tolerance-bps uint))
   (let (
     (token-address (contract-of token))
     (token-base (pow u10 (unwrap-panic (contract-call? token get-decimals))))
   )
     (try! (contract-call? .hq check-is-protocol contract-caller))
     (asserts! (<= conf-tolerance-bps bps-base) ERR_MAX_CONF_TOO_HIGH)
-    (asserts! (is-standard custody-address) ERR_NOT_STANDARD_PRINCIPAL)
+
     (if (check-is-supported-asset token-address)
       (print { 
         contract: token-address, 
         old-values: (some (unwrap-panic (get-supported-asset token-address))), 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps } })
       (print { 
         contract: token-address, 
         old-values: none, 
-        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address } })
+        new-values: { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps } })
     )
-    (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps, custody-address: custody-address }))
+    (ok (map-set supported-assets { contract: token-address } { active: active, price-feed-id: price-feed-id, token-base: token-base, conf-tolerance-bps: conf-tolerance-bps }))
   )
 )
