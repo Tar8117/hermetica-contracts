@@ -77,7 +77,7 @@
 
 (define-read-only (get-whitelist (address principal) (asset principal))
   (default-to 
-    { minter: false, redeemer: false, block-delay: u2, price-slippage: u0, custody-address: none }
+    { minter: false, redeemer: false, block-delay: u1, price-slippage: u0, custody-address: none }
     (map-get? whitelist { address: address, asset: asset })
   )
 )
