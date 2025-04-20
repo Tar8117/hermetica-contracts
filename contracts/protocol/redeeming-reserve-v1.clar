@@ -4,7 +4,7 @@
 (use-trait sip-010-trait .sip-010-trait.sip-010-trait)
 
 ;;-------------------------------------
-;; Get USDh
+;; Transfer
 ;;-------------------------------------
 
 (define-public (transfer (amount uint) (recipient principal) (redeeming-asset <sip-010-trait>) (memo (optional (buff 34))))
