@@ -77,7 +77,7 @@
 (define-public (set-manager (address principal) (active bool))
   (begin
     (try! (contract-call? .hq check-is-protocol contract-caller))
-    ;;(asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
+    (asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
     (print { address: address, old-value: (get active (get-manager address)), new-value: active })
     (ok (map-set managers { address: address } { active: active }))
   )
@@ -86,7 +86,7 @@
 (define-public (set-authorized-recipient (address principal) (active bool))
   (begin
     (try! (contract-call? .hq check-is-protocol contract-caller))
-    ;;(asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
+    (asserts! (is-standard address) ERR_NOT_STANDARD_PRINCIPAL)
     (print { address: address, old-value: (get active (get-authorized-recipient address)), new-value: active })
     (ok (map-set authorized-recipients { address: address } { active: active }))
   )
