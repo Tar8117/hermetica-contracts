@@ -27,8 +27,8 @@
 
 (define-constant max-price-slippage u1000)
 (define-constant max-block-delay u10)
-(define-constant max-mint-limit (* u1000000 usdh-base))
-(define-constant min-mint-limit-reset-window u1200)
+(define-constant max-mint-limit (* u500000 usdh-base))
+(define-constant min-mint-limit-reset-window u60)
 
 ;;-------------------------------------
 ;; Variables
@@ -36,7 +36,7 @@
 
 (define-data-var mint-limit uint (* u100000 usdh-base))
 (define-data-var current-mint-limit uint (* u100000 usdh-base))
-(define-data-var mint-limit-reset-window uint u3600)
+(define-data-var mint-limit-reset-window uint u600)
 (define-data-var last-mint-limit-reset uint u0)
 
 ;;-------------------------------------
