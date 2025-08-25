@@ -5,9 +5,9 @@
 ;; Constants
 ;;-------------------------------------
 
-(define-constant ERR_NO_CLAIM_FOR_ID (err u4001))
-(define-constant ERR_NOT_COOLED_DOWN (err u4002))
-(define-constant ERR_ONLY_STAKING_CONTRACT (err u4003))
+(define-constant ERR_NO_CLAIM_FOR_ID (err u3101))
+(define-constant ERR_NOT_COOLED_DOWN (err u3102))
+(define-constant ERR_ONLY_STAKING_CONTRACT (err u3103))
 
 ;;-------------------------------------
 ;; Variables
