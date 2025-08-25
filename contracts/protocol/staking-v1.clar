@@ -1,16 +1,13 @@
 ;; @contract Staking
-;; @version 1
+;; @version 0.1.1
 
 ;;-------------------------------------
 ;; Constants & Variables
 ;;-------------------------------------
 
 (define-constant ERR_INVALID_AMOUNT (err u3001))
-(define-constant ERR_ALREADY_INITALIZED (err u3002))
 
 (define-constant usdh-base (pow u10 u8))
-
-(define-data-var initialized bool false)
 
 ;;-------------------------------------
 ;; Getters
@@ -47,9 +44,9 @@
     (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist tx-sender))
     (try! (contract-call? .hq check-is-enabled))
 
-    (try! (contract-call? .usdh-token transfer amount tx-sender .staking none))
+    (try! (contract-call? .usdh-token transfer amount tx-sender .staking-reserve none))
     (try! (contract-call? .susdh-token mint-for-protocol amount-susdh tx-sender))
-    (print { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio })
+    (print {action: "stake", user: contract-caller, data: { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio }})
     (ok true)
   )
 )
@@ -65,24 +62,8 @@
 
     (try! (contract-call? .susdh-token burn-for-protocol amount tx-sender))
     (try! (contract-call? .staking-silo create-claim amount-usdh tx-sender))
-    (try! (contract-call? .usdh-token transfer amount-usdh (as-contract tx-sender) .staking-silo none))
-    (print { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio })
+    (try! (contract-call? .staking-reserve transfer amount-usdh .staking-silo))
+    (print {action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio }})
     (ok true)
-  )
-)
-
-;;-------------------------------------
-;; Init
-;;-------------------------------------
-
-(define-public (init-usdh-per-susdh (ratio uint)) 
-  (let (
-    (susdh-amount (/ (* usdh-base usdh-base) ratio))
-  )
-    (asserts! (not (var-get initialized)) ERR_ALREADY_INITALIZED)
-    (asserts! (>= ratio usdh-base) ERR_INVALID_AMOUNT)
-    (try! (contract-call? .usdh-token mint-for-protocol usdh-base .staking))
-    (try! (contract-call? .susdh-token mint-for-protocol susdh-amount .staking))
-    (ok (var-set initialized true))
   )
 )
