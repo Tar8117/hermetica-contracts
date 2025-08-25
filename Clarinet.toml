@@ -48,7 +48,7 @@ clarity_version = 2
 epoch = 2.5
 
 [contracts.staking]
-path = 'contracts/protocol/staking-v1.clar'
+path = 'contracts/protocol/staking-v1-1.clar'
 clarity_version = 2
 epoch = 2.5
 
