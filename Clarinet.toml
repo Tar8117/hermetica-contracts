@@ -5,6 +5,9 @@ authors = []
 telemetry = false
 cache_dir = '.cache'
 
+[[project.requirements]]
+contract_id = 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3'
+
 # protocol
 
 [contracts.minting-state]
@@ -53,7 +56,7 @@ clarity_version = 2
 epoch = 2.5
 
 [contracts.staking-silo]
-path = 'contracts/protocol/staking-silo-v1.clar'
+path = 'contracts/protocol/staking-silo-v1-1.clar'
 clarity_version = 3
 epoch = 3.1
 
