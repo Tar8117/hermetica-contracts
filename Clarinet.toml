@@ -57,6 +57,16 @@ path = 'contracts/protocol/staking-silo-v1.clar'
 clarity_version = 3
 epoch = 3.1
 
+[contracts.staking-reserve]
+path = 'contracts/protocol/staking-reserve-v1.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.staking-state]
+path = 'contracts/protocol/staking-state-v1.clar'
+clarity_version = 3
+epoch = 3.1
+
 [contracts.blacklist-susdh]
 path = 'contracts/protocol/blacklist-susdh-v1.clar'
 clarity_version = 2
