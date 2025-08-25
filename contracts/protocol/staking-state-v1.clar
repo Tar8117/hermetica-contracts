@@ -5,7 +5,7 @@
 ;; Constants
 ;;-------------------------------------
 
-(define-constant ERR_ABOVE_MAX (err u4001))
+(define-constant ERR_ABOVE_MAX (err u3201))
 
 (define-constant max-cooldown-window u2592000)    ;; 30 days in seconds
 
