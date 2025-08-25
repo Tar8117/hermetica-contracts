@@ -1,6 +1,8 @@
 ;; @contract Staking
 ;; @version 1.1
 
+(impl-trait .staking-trait-v1.staking-trait)
+
 ;;-------------------------------------
 ;; Constants & Variables
 ;;-------------------------------------
@@ -15,10 +17,10 @@
 
 (define-read-only (get-usdh-per-susdh) 
   (let (
-    (total-usdh-staked (unwrap-panic (contract-call? .usdh-token get-balance .staking)))
+    (total-usdh-staked (unwrap-panic (contract-call? .usdh-token get-balance .staking-reserve)))
     (total-susdh-supply (unwrap-panic (contract-call? .susdh-token get-total-supply)))
   )
-    (if (and (> total-usdh-staked u0) (> total-susdh-supply u0))
+    (ok (if (and (> total-usdh-staked u0) (> total-susdh-supply u0))
       (/
         (*
           total-usdh-staked
@@ -27,7 +29,7 @@
         total-susdh-supply
       )
       usdh-base
-    )
+    ))
   )
 )
 
@@ -35,35 +37,36 @@
 ;; User
 ;;-------------------------------------
 
-(define-public (stake (amount uint))
+(define-public (stake (amount uint) (affiliate (optional (buff 64))))
   (let (
-    (ratio (get-usdh-per-susdh))
+    (ratio (unwrap-panic (get-usdh-per-susdh)))
     (amount-susdh (/ (* amount usdh-base) ratio))
   )
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist tx-sender))
+    (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist contract-caller))
     (try! (contract-call? .hq check-is-enabled))
 
-    (try! (contract-call? .usdh-token transfer amount tx-sender .staking-reserve none))
-    (try! (contract-call? .susdh-token mint-for-protocol amount-susdh tx-sender))
-    (print {action: "stake", user: contract-caller, data: { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio }})
+    (try! (contract-call? .usdh-token transfer amount contract-caller .staking-reserve none))
+    (try! (contract-call? .susdh-token mint-for-protocol amount-susdh contract-caller))
+    (print { action: "stake", user: contract-caller, data: { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio, affiliate: affiliate }})
     (ok true)
   )
 )
 
 (define-public (unstake (amount uint))
   (let (
-    (ratio (get-usdh-per-susdh))
+    (ratio (unwrap-panic (get-usdh-per-susdh)))
     (amount-usdh (/ (* amount ratio) usdh-base))
+    (claim-id (+ u1 (contract-call? .staking-silo get-current-claim-id)))
   )
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist tx-sender))
+    (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist contract-caller))
     (try! (contract-call? .hq check-is-enabled))
 
-    (try! (contract-call? .susdh-token burn-for-protocol amount tx-sender))
-    (try! (contract-call? .staking-silo create-claim amount-usdh tx-sender))
+    (try! (contract-call? .susdh-token burn-for-protocol amount contract-caller))
+    (try! (contract-call? .staking-silo create-claim amount-usdh contract-caller))
     (try! (contract-call? .staking-reserve transfer amount-usdh .staking-silo))
     (print {action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio }})
-    (ok true)
+    (ok claim-id)
   )
 )

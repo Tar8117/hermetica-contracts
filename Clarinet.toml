@@ -109,6 +109,11 @@ path = 'contracts/traits/interim-token-trait-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
+[contracts.staking-trait]
+path = 'contracts/traits/staking-trait-v1.clar'
+clarity_version = 3
+epoch = 3.1
+
 # pyth
 
 [[project.requirements]]
