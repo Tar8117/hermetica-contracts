@@ -8,6 +8,7 @@
 (define-constant ERR_NO_CLAIM_FOR_ID (err u3101))
 (define-constant ERR_NOT_COOLED_DOWN (err u3102))
 (define-constant ERR_ONLY_STAKING_CONTRACT (err u3103))
+(define-constant ERR_INVALID_AMOUNT (err u3104))
 
 ;;-------------------------------------
 ;; Variables
@@ -74,6 +75,7 @@
     (ts (+ (get-current-ts) (contract-call? .staking-state get-custom-cooldown recipient)))
   )
     (asserts! (is-eq contract-caller .staking) ERR_ONLY_STAKING_CONTRACT)
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     (map-set claims { claim-id: next-claim-id } 
       {
         recipient: recipient,
