@@ -57,7 +57,7 @@
   (let (
     (ratio (unwrap-panic (get-usdh-per-susdh)))
     (amount-usdh (/ (* amount ratio) usdh-base))
-    (claim-id (+ u1 (contract-call? .staking-silo get-current-claim-id)))
+    (claim-id (try! (contract-call? .staking-silo create-claim amount-usdh contract-caller)))
   )
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist contract-caller))

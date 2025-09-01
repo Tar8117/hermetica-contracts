@@ -70,18 +70,19 @@
 
 (define-public (create-claim (amount uint) (recipient principal))
   (let (
-    (next-claim-id (+ (get-current-claim-id) u1))
+    (claim-id (+ u1 (get-current-claim-id)))
     (ts (+ (get-current-ts) (contract-call? .staking-state get-custom-cooldown recipient)))
   )
     (asserts! (is-eq contract-caller .staking) ERR_ONLY_STAKING_CONTRACT)
-    (map-set claims { claim-id: next-claim-id } 
+    (map-set claims { claim-id: claim-id } 
       {
         recipient: recipient,
         amount: amount,
         ts: ts
       }
     )
-    (print {action: "create-claim", user: contract-caller, data: {claim-id: next-claim-id, recipient: recipient, amount: amount, claim-ts: ts}})
-    (ok (var-set current-claim-id next-claim-id))
+    (print {action: "create-claim", user: contract-caller, data: {claim-id: claim-id, recipient: recipient, amount: amount, claim-ts: ts}})
+    (var-set current-claim-id claim-id)
+    (ok claim-id)
   )
 )
