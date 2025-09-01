@@ -43,6 +43,7 @@
     (amount-susdh (/ (* amount usdh-base) ratio))
   )
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    (try! (contract-call? .staking-state check-is-staking-enabled))
     (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist contract-caller))
     (try! (contract-call? .hq check-is-enabled))
 
