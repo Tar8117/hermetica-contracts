@@ -51,7 +51,7 @@
 
 (define-public (set-cooldown-window (new-window uint))
   (begin
-    (try! (contract-call? .hq check-is-protocol tx-sender))
+    (try! (contract-call? .hq check-is-admin tx-sender))
     (asserts! (<= new-window max-cooldown-window ) ERR_ABOVE_MAX)
     (print {action: "set-cooldown-window", user: contract-caller, data: { old-value: (get-cooldown-window), new-value: new-window}})
     (ok (var-set cooldown-window new-window))
