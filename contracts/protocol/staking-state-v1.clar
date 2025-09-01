@@ -51,7 +51,7 @@
 
 (define-public (set-cooldown-window (new-window uint))
   (begin
-    (try! (contract-call? .hq check-is-admin tx-sender))
+    (try! (contract-call? .hq check-is-admin contract-caller))
     (asserts! (<= new-window max-cooldown-window ) ERR_ABOVE_MAX)
     (print {action: "set-cooldown-window", user: contract-caller, data: { old-value: (get-cooldown-window), new-value: new-window}})
     (ok (var-set cooldown-window new-window))
@@ -60,7 +60,7 @@
 
 (define-public (set-custom-cooldown (principal principal) (new-window uint))
   (begin
-    (try! (contract-call? .hq check-is-admin tx-sender))
+    (try! (contract-call? .hq check-is-admin contract-caller))
     (asserts! (<= new-window max-cooldown-window) ERR_ABOVE_MAX)
     (print {action: "set-custom-cooldown", user: contract-caller, data: { principal: principal, old-value: (get-custom-cooldown principal), new-value: new-window}})
     (ok (map-set custom-cooldown { principal: principal } { cooldown-window: new-window }))
