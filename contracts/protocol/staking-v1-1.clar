@@ -48,7 +48,7 @@
 
     (try! (contract-call? .usdh-token transfer amount contract-caller .staking-reserve none))
     (try! (contract-call? .susdh-token mint-for-protocol amount-susdh contract-caller))
-    (print { action: "stake", user: contract-caller, data: { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio, affiliate: affiliate }})
+    (print { action: "stake", user: contract-caller, data: { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio, affiliate: affiliate } })
     (ok true)
   )
 )
@@ -65,7 +65,7 @@
 
     (try! (contract-call? .susdh-token burn-for-protocol amount contract-caller))
     (try! (contract-call? .staking-reserve transfer amount-usdh .staking-silo))
-    (print { action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio }})
+    (print { action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio } })
     (ok claim-id)
   )
 )
