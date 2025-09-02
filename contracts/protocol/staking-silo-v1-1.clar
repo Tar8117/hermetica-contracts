@@ -59,7 +59,7 @@
   )
     (asserts! (>= (get-current-ts) (get ts current-claim)) ERR_NOT_COOLED_DOWN)
     (try! (contract-call? .usdh-token transfer (get amount current-claim) (as-contract tx-sender) (get recipient current-claim) none))
-    (print {action: "withdraw", user: contract-caller, data: {claim-id: claim-id, claim-data: current-claim}})
+    (print { action: "withdraw", user: contract-caller, data: { claim-id: claim-id, claim-data: current-claim }})
     (ok (map-delete claims { claim-id: claim-id }))
   )
 )
@@ -81,7 +81,7 @@
         ts: ts
       }
     )
-    (print {action: "create-claim", user: contract-caller, data: {claim-id: claim-id, recipient: recipient, amount: amount, claim-ts: ts}})
+    (print { action: "create-claim", user: contract-caller, data: { claim-id: claim-id, recipient: recipient, amount: amount, claim-ts: ts }})
     (var-set current-claim-id claim-id)
     (ok claim-id)
   )

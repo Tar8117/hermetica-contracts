@@ -65,7 +65,7 @@
 
     (try! (contract-call? .susdh-token burn-for-protocol amount contract-caller))
     (try! (contract-call? .staking-reserve transfer amount-usdh .staking-silo))
-    (print {action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio }})
+    (print { action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio }})
     (ok claim-id)
   )
 )
