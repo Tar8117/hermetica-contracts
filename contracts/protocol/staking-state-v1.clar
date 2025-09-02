@@ -83,7 +83,7 @@
 
 (define-public (set-staking-enabled (new-enabled bool))
   (begin
-    (try! (contract-call? .hq check-is-admin tx-sender))
+    (try! (contract-call? .hq check-is-admin contract-caller))
     (print {action: "set-staking-enabled", user: contract-caller, data: { old-value: (get-staking-enabled), new-value: new-enabled}})
     (ok (var-set staking-enabled new-enabled))
   )
