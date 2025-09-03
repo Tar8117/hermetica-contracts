@@ -76,7 +76,7 @@
   )
     (asserts! (is-eq contract-caller .staking) ERR_ONLY_STAKING_CONTRACT)
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    (map-set claims { claim-id: next-claim-id } 
+    (map-set claims { claim-id: claim-id } 
       {
         recipient: recipient,
         amount: amount,
