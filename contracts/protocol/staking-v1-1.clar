@@ -48,7 +48,7 @@
 
     (try! (contract-call? .usdh-token transfer amount contract-caller .staking-reserve none))
     (try! (contract-call? .susdh-token mint-for-protocol amount-susdh contract-caller))
-    (print { action: "stake", user: contract-caller, data: { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio, affiliate: affiliate }})
+    (print { action: "stake", user: contract-caller, data: { amount-susdh: amount-susdh, amount-usdh: amount, ratio: ratio, affiliate: affiliate } })
     (ok true)
   )
 )
@@ -57,16 +57,15 @@
   (let (
     (ratio (unwrap-panic (get-usdh-per-susdh)))
     (amount-usdh (/ (* amount ratio) usdh-base))
-    (claim-id (+ u1 (contract-call? .staking-silo get-current-claim-id)))
+    (claim-id (try! (contract-call? .staking-silo create-claim amount-usdh contract-caller)))
   )
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist-susdh check-is-not-soft-blacklist contract-caller))
     (try! (contract-call? .hq check-is-enabled))
 
     (try! (contract-call? .susdh-token burn-for-protocol amount contract-caller))
-    (try! (contract-call? .staking-silo create-claim amount-usdh contract-caller))
     (try! (contract-call? .staking-reserve transfer amount-usdh .staking-silo))
-    (print {action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio }})
+    (print { action: "unstake", user: contract-caller, data: { amount-susdh: amount, amount-usdh: amount-usdh, ratio: ratio } })
     (ok claim-id)
   )
 )
