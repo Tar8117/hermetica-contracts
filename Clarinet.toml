@@ -114,6 +114,119 @@ path = 'contracts/traits/staking-trait-v1.clar'
 clarity_version = 3
 epoch = 3.1
 
+# hbtc protocol
+
+[contracts.hbtc-blacklist]
+path = 'contracts/hbtc/protocol/blacklist-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-controller]
+path = 'contracts/hbtc/protocol/controller-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-fee-collector]
+path = 'contracts/hbtc/protocol/fee-collector-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-hq]
+path = 'contracts/hbtc/protocol/hq-hbtc-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-reserve-fund]
+path = 'contracts/hbtc/protocol/reserve-fund-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-reserve]
+path = 'contracts/hbtc/protocol/reserve-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-state]
+path = 'contracts/hbtc/protocol/state-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-trading]
+path = 'contracts/hbtc/protocol/trading-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-vault]
+path = 'contracts/hbtc/protocol/vault-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+# hbtc interfaces
+
+[contracts.bitflow-interface]
+path = 'contracts/hbtc/protocol/interfaces/bitflow-interface-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.granite-interface]
+path = 'contracts/hbtc/protocol/interfaces/granite-interface-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hermetica-interface]
+path = 'contracts/hbtc/protocol/interfaces/hermetica-interface-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-interface]
+path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-interface-v1-1]
+path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1-1.clar'
+clarity_version = 3
+epoch = 3.2
+
+# hbtc tokens
+
+[contracts.hbtc-token]
+path = 'contracts/hbtc/tokens/hbtc-token-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+# hbtc traits
+
+[contracts.bitflow-traits]
+path = 'contracts/hbtc/traits/bitflow-traits-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.granite-borrower-trait]
+path = 'contracts/hbtc/traits/granite-borrower-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.vault-trait]
+path = 'contracts/hbtc/traits/vault-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-borrow-helper-trait]
+path = 'contracts/hbtc/traits/zest-borrow-helper-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-market-trait]
+path = 'contracts/hbtc/traits/zest-market-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-vault-trait]
+path = 'contracts/hbtc/traits/zest-vault-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
 # pyth
 
 [[project.requirements]]
