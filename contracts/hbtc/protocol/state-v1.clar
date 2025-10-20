@@ -1,5 +1,6 @@
 ;; @contract Vault State
 ;; @version 1
+;; @desc State contract for hBTC protocol
 
 (use-trait ft .sip-010-trait.sip-010-trait)
 

@@ -1,6 +1,6 @@
 ;; @contract Reserve Fund
 ;; @version 1
-;; @description Reserve fund contract to cover negative rewards
+;; @desc Reserve fund contract to cover negative rewards
 
 (use-trait ft .sip-010-trait.sip-010-trait)
 

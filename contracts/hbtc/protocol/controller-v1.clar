@@ -1,5 +1,6 @@
 ;; @contract Controller
 ;; @version 1
+;; @desc Controller contract for hBTC protocol
 
 ;;-------------------------------------
 ;; Constants

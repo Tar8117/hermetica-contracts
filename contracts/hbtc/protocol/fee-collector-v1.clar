@@ -1,6 +1,6 @@
 ;; @contract Fee Collector
-;; @description Collects protocol fees and transfers to fee address
 ;; @version 1
+;; @desc Collects protocol fees and transfers to fee address
 
 (use-trait ft .sip-010-trait.sip-010-trait)
 

@@ -1,5 +1,6 @@
 ;; @contract Vault
 ;; @version 1
+;; @desc User facing vault contract for hBTC protocol
 
 (impl-trait .vault-trait-v1.vault-trait)
 

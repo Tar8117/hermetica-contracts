@@ -1,6 +1,6 @@
 ;; @contract Trading 
 ;; @version 1
-;; @description Batched and atomic position management across DeFi protocols
+;; @desc Batched and atomic position management across DeFi protocols
 
 (use-trait ft 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.ft-trait.ft-trait)
 (use-trait zest-market .zest-market-trait-v1.zest-market-trait)

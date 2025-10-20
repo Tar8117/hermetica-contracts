@@ -1,6 +1,6 @@
 ;; @contract Reserve
 ;; @version 1
-;; @description Main reserve contract holding protocol assets
+;; @desc Main reserve contract holding protocol assets
 
 (use-trait ft .sip-010-trait.sip-010-trait)
 

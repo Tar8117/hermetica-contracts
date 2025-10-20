@@ -1,5 +1,6 @@
 ;; @contract Hermetica Interface
 ;; @version 1
+;; @desc Interface for Hermetica protocol integration
 
 (use-trait ft .sip-010-trait.sip-010-trait)
 (use-trait pyth-storage .pyth-traits-v2.storage-trait)

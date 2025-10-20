@@ -1,7 +1,7 @@
 ;; @contract HQ
 ;; @version 1
-;; @description Centralized governance contract for HBTC protocol
-;; @author Hermetica
+;; @desc Centralized governance contract for HBTC protocol
+
 
 ;;-------------------------------------
 ;; Constants
