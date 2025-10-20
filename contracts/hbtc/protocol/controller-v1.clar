@@ -1,6 +1,5 @@
 ;; @contract Controller
 ;; @version 1
-;; @desc Controller contract for hBTC protocol
 
 ;;-------------------------------------
 ;; Constants
@@ -23,9 +22,6 @@
 ;;-------------------------------------
 
 ;; @desc - log the reward and update the token price
-;; @param - reward: the reward amount without fees and reserve fund allocations (in deposit-asset, 10**8)
-;; @param - is-positive: whether the reward is positive or negative  
-;; @note - if reward is zero, is-positive must be true
 (define-public (log-reward (reward uint) (is-positive bool))
   (let (
     (state (contract-call? .state-v1 get-reward-state))
@@ -101,14 +97,6 @@
 ;;-------------------------------------
 
 ;; @desc - Handle profit scenario
-;; @param - reward: original input reward amount from the trader
-;; @param - is-positive: whether the reward is positive or negative
-;; @param - total-rf: current reserve fund balance
-;; @param - pending-rf: current pending-rf balance
-;; @param - perf-fee: performance fee amount
-;; @param - mgmt-fee: management fee amount
-;; @param - reserve-rate: reserve fund allocation rate
-;; @return - (response bool uint) success response after updating token price
 (define-private (handle-profit 
   (reward uint) (is-positive bool)
   (total-rf uint) (pending-rf uint)
@@ -136,14 +124,6 @@
 )
 
 ;; @desc - Handle loss covered by reserve fund
-;; @param - reward: original reward amount (in deposit-asset, 10**8)
-;; @param - is-positive: whether the reward is positive or negative
-;; @param - total-rf: current reserve fund balance
-;; @param - pending-rf: current pending-rf balance
-;; @param - req-rf: amount required from reserve fund
-;; @param - perf-fee: performance fee amount
-;; @param - mgmt-fee: management fee amount
-;; @return - (response bool uint) success response after transferring reserve fund and updating token price
 (define-private (handle-loss-covered 
   (reward uint) (is-positive bool)
   (total-rf uint) (pending-rf uint)
@@ -178,14 +158,6 @@
 )
 
 ;; @desc - Handle trading loss scenario where losses exceed reserve fund capacity
-;; @param - reward: original reward amount from the trader
-;; @param - is-positive: whether the reward is positive or negative
-;; @param - total-rf: current reserve fund balance
-;; @param - pending-rf: current pending-rf balance
-;; @param - req-rf: amount required from reserve fund
-;; @param - perf-fee: performance fee amount
-;; @param - mgmt-fee: management fee amount
-;; @return - (response bool uint) success response after transferring reserve fund and updating token price
 (define-private (handle-loss-exceeds 
   (reward uint) (is-positive bool)
   (total-rf uint) (pending-rf uint) (req-rf uint)
@@ -203,7 +175,7 @@
       (try! (contract-call? .reserve-fund-v1 transfer sbtc-token (- total-rf pending-rf) reserve none))
       true
     )
-    ;; Single batch call with commit-reward logic (loss decreases total-assets)
+
     (ok (try! (contract-call? .state-v1 update-state 
       (list
         { type: "pending-fees", amount: mgmt-fee, is-add: true }
@@ -216,4 +188,3 @@
 (define-private (get-sbtc-balance (contract principal))
   (unwrap-panic (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token get-balance contract))
 )
-

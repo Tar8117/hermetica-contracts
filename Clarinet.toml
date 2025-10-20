@@ -11,7 +11,7 @@ contract_id = 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3'
 [[project.requirements]]
 contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4'
 
-# usdh protocol
+# protocol
 
 [contracts.minting-state]
 path = 'contracts/usdh/protocol/minting-state-v1.clar'
@@ -119,59 +119,59 @@ epoch = 3.1
 
 # hbtc protocol
 
-[contracts.hbtc-blacklist]
+[contracts.blacklist-v1]
 path = 'contracts/hbtc/protocol/blacklist-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-controller]
+[contracts.controller-v1]
 path = 'contracts/hbtc/protocol/controller-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-fee-collector]
+[contracts.fee-collector-v1]
 path = 'contracts/hbtc/protocol/fee-collector-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-hq]
+[contracts.hq-hbtc-v1]
 path = 'contracts/hbtc/protocol/hq-hbtc-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-reserve-fund]
+[contracts.reserve-fund-v1]
 path = 'contracts/hbtc/protocol/reserve-fund-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-reserve]
+[contracts.reserve-v1]
 path = 'contracts/hbtc/protocol/reserve-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-state]
+[contracts.state-v1]
 path = 'contracts/hbtc/protocol/state-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-trading]
+[contracts.trading-v1]
 path = 'contracts/hbtc/protocol/trading-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hbtc-vault]
+[contracts.vault-v1]
 path = 'contracts/hbtc/protocol/vault-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
 # hbtc interfaces
 
-[contracts.hermetica-interface]
+[contracts.hermetica-interface-v1]
 path = 'contracts/hbtc/protocol/interfaces/hermetica-interface-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.zest-interface]
+[contracts.zest-interface-v1]
 path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1.clar'
 clarity_version = 3
 epoch = 3.2
@@ -185,17 +185,17 @@ epoch = 3.2
 
 # hbtc traits
 
-[contracts.vault-trait]
+[contracts.vault-trait-v1]
 path = 'contracts/hbtc/traits/vault-trait-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.zest-market-trait]
+[contracts.zest-market-trait-v1]
 path = 'contracts/hbtc/traits/zest-market-trait-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.zest-vault-trait]
+[contracts.zest-vault-trait-v1]
 path = 'contracts/hbtc/traits/zest-vault-trait-v1.clar'
 clarity_version = 3
 epoch = 3.2

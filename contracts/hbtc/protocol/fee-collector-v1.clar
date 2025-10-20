@@ -1,6 +1,6 @@
 ;; @contract Fee Collector
+;; @description Collects protocol fees and transfers to fee address
 ;; @version 1
-;; @desc Collects protocol fees and transfers to fee address
 
 (use-trait ft .sip-010-trait.sip-010-trait)
 
@@ -12,8 +12,6 @@
 ;; Withdrawal
 ;;-------------------------------------
 
-;; @desc - transfers asset to fee address
-;; @param - asset: asset to transfer (sip-010-trait)
 (define-public (withdraw (asset <ft>))
   (let (
     (asset-contract (contract-of asset))
@@ -26,4 +24,3 @@
     (ok (try! (as-contract (contract-call? asset transfer balance tx-sender fee-address none))))
   )
 )
-

@@ -172,4 +172,3 @@
     (ok (var-set full-blacklist-active active))
   )
 )
-

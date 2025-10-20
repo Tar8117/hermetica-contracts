@@ -1,6 +1,6 @@
 ;; @contract Reserve
 ;; @version 1
-;; @desc Main reserve contract holding protocol assets
+;; @description Main reserve contract holding protocol assets
 
 (use-trait ft .sip-010-trait.sip-010-trait)
 
@@ -12,9 +12,6 @@
 ;;-------------------------------------
 
 ;; @desc - transfers asset to recipient
-;; @param - asset: asset to transfer (sip-010-trait)
-;; @param - amount: amount of asset to transfer (10**8)
-;; @param - recipient: recipient of the asset
 (define-public (transfer (asset <ft>) (amount uint) (recipient principal))
   (let (
     (balance (try! (contract-call? asset get-balance this-contract)))
@@ -26,4 +23,3 @@
     (ok (try! (as-contract (contract-call? asset transfer amount tx-sender recipient none))))
   )
 )
-

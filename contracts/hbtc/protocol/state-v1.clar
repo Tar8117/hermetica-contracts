@@ -146,7 +146,7 @@
 (define-read-only (get-share-price)
   (let (
     (net-assets (get-net-assets))
-    (total-supply (unwrap-panic (contract-call? .hbtc-token-v1 get-total-supply)))
+    (total-supply (unwrap-panic (contract-call? .hbtc-token get-total-supply)))
   )
     (if (> total-supply u0)
       (/ (* net-assets share-base) total-supply)
@@ -402,11 +402,11 @@
 
 (define-private (update-shares (amount uint) (is-add bool) (user principal))
   (let (
-    (current (unwrap-panic (contract-call? .hbtc-token-v1 get-total-supply)))
+    (current (unwrap-panic (contract-call? .hbtc-token get-total-supply)))
   )
     (if is-add 
-      (try! (contract-call? .hbtc-token-v1 mint-for-protocol amount user)) 
-      (try! (contract-call? .hbtc-token-v1 burn-for-protocol amount user)))
+      (try! (contract-call? .hbtc-token mint-for-protocol amount user)) 
+      (try! (contract-call? .hbtc-token burn-for-protocol amount user)))
     (print { action: "update-shares", data: { old: current, new: (if is-add (+ current amount) (- current amount)), user: user, is-add: is-add } })
     (ok true)
   )

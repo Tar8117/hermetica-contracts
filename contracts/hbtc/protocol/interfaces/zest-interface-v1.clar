@@ -18,11 +18,6 @@
 ;;-------------------------------------
 
 ;; @desc - Adds collateral to Zest v2 market
-;; @param - market-trait: Zest v2 market contract
-;; @param - asset-trait: Token to supply as collateral
-;; @param - amount: Amount of tokens to supply
-;; @param - price-feed-1: Optional Pyth price feed data for sBTC
-;; @param - price-feed-2: Optional Pyth price feed data (secondary)
 (define-public (zest-collateral-add
   (market-trait <zest-market>)
   (asset-trait <ft>)
@@ -50,11 +45,6 @@
 )
 
 ;; @desc - Removes collateral from Zest v2 market
-;; @param - market-trait: Zest v2 market contract
-;; @param - asset-trait: Token to remove from collateral
-;; @param - amount: Amount of tokens to remove
-;; @param - price-feed-1: Optional Pyth price feed data for sBTC
-;; @param - price-feed-2: Optional Pyth price feed data (secondary)
 (define-public (zest-collateral-remove
   (market-trait <zest-market>)
   (asset-trait <ft>)
@@ -86,11 +76,6 @@
 ;;-------------------------------------
 
 ;; @desc - Borrows assets from Zest v2 market
-;; @param - market-trait: Zest v2 market contract
-;; @param - asset-trait: Token to borrow
-;; @param - amount: Amount of tokens to borrow
-;; @param - price-feed-1: Optional Pyth price feed data for sBTC
-;; @param - price-feed-2: Optional Pyth price feed data (secondary)
 (define-public (zest-borrow
   (market-trait <zest-market>)
   (asset-trait <ft>)
@@ -118,11 +103,6 @@
 )
 
 ;; @desc - Repays borrowed assets to Zest v2 market
-;; @param - market-trait: Zest v2 market contract
-;; @param - asset-trait: Token to repay
-;; @param - amount: Amount of tokens to repay
-;; @param - price-feed-1: Optional Pyth price feed data for sBTC
-;; @param - price-feed-2: Optional Pyth price feed data (secondary)
 (define-public (zest-repay
   (market-trait <zest-market>)
   (asset-trait <ft>)
@@ -154,13 +134,6 @@
 ;;-------------------------------------
 
 ;; @desc - Deposits assets to Zest v2 vault as liquidity provider
-;; @param - vault-trait: Zest v2 vault contract
-;; @param - z-token-trait: Z-token (vault shares) to receive
-;; @param - asset-trait: Token to deposit to vault
-;; @param - amount: Amount of tokens to deposit
-;; @param - min-shares: Minimum vault shares to receive (slippage protection)
-;; @param - price-feed-1: Optional Pyth price feed data for sBTC
-;; @param - price-feed-2: Optional Pyth price feed data (secondary)
 (define-public (zest-deposit
   (vault-trait <zest-vault>)
   (z-token-trait <ft>)
@@ -195,13 +168,6 @@
 )
 
 ;; @desc - Redeems vault shares from Zest v2 vault
-;; @param - vault-trait: Zest v2 vault contract
-;; @param - z-token-trait: Z-token (vault shares) to redeem
-;; @param - asset-trait: Token to receive from vault
-;; @param - shares: Amount of vault shares to redeem
-;; @param - min-amount: Minimum underlying tokens to receive (slippage protection)
-;; @param - price-feed-1: Optional Pyth price feed data for sBTC
-;; @param - price-feed-2: Optional Pyth price feed data (secondary)
 (define-public (zest-redeem
   (vault-trait <zest-vault>)
   (z-token-trait <ft>)
@@ -241,8 +207,6 @@
 ;;-------------------------------------
 
 ;; @desc - sweeps any leftover tokens from interface contract to reserve
-;; @param - asset-trait: the token to sweep
-;; @param - amount: the amount to sweep
 (define-public (sweep (asset-trait <ft>) (amount uint))
   (begin
     (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
