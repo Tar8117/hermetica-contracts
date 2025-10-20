@@ -11,7 +11,7 @@ contract_id = 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3'
 [[project.requirements]]
 contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4'
 
-# protocol
+# usdh protocol
 
 [contracts.minting-state]
 path = 'contracts/usdh/protocol/minting-state-v1.clar'
@@ -166,16 +166,6 @@ epoch = 3.2
 
 # hbtc interfaces
 
-[contracts.bitflow-interface]
-path = 'contracts/hbtc/protocol/interfaces/bitflow-interface-v1.clar'
-clarity_version = 3
-epoch = 3.2
-
-[contracts.granite-interface]
-path = 'contracts/hbtc/protocol/interfaces/granite-interface-v1.clar'
-clarity_version = 3
-epoch = 3.2
-
 [contracts.hermetica-interface]
 path = 'contracts/hbtc/protocol/interfaces/hermetica-interface-v1.clar'
 clarity_version = 3
@@ -186,37 +176,17 @@ path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.zest-interface-v1-1]
-path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1-1.clar'
-clarity_version = 3
-epoch = 3.2
-
 # hbtc tokens
 
 [contracts.hbtc-token]
-path = 'contracts/hbtc/tokens/hbtc-token-v1.clar'
+path = 'contracts/hbtc/tokens/hbtc-token.clar'
 clarity_version = 3
 epoch = 3.2
 
 # hbtc traits
 
-[contracts.bitflow-traits]
-path = 'contracts/hbtc/traits/bitflow-traits-v1.clar'
-clarity_version = 3
-epoch = 3.2
-
-[contracts.granite-borrower-trait]
-path = 'contracts/hbtc/traits/granite-borrower-trait-v1.clar'
-clarity_version = 3
-epoch = 3.2
-
 [contracts.vault-trait]
 path = 'contracts/hbtc/traits/vault-trait-v1.clar'
-clarity_version = 3
-epoch = 3.2
-
-[contracts.zest-borrow-helper-trait]
-path = 'contracts/hbtc/traits/zest-borrow-helper-trait-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
