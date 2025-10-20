@@ -162,8 +162,6 @@
 ;;-------------------------------------
 
 ;; @desc - sweeps any leftover tokens from interface contract to reserve
-;; @param - asset-trait: the token to sweep
-;; @param - amount: the amount to sweep
 (define-public (sweep (asset-trait <ft>) (amount uint))
   (begin
     (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
