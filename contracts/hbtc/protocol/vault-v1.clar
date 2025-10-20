@@ -20,9 +20,9 @@
 (define-constant bps-base (pow u10 u4))
 
 (define-constant this-contract (as-contract tx-sender))
-(define-constant reserve .reserve-v1)
+(define-constant reserve .reserve)
 (define-constant sbtc-token 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token)
-(define-constant fee-collector .fee-collector-v1)
+(define-constant fee-collector .fee-collector)
 
 ;;-------------------------------------
 ;; Maps
@@ -49,14 +49,14 @@
 ;; @param - assets: amount of underlying asset (sBTC) to convert
 ;; @return - number of shares (hBTC tokens) that would be minted
 (define-read-only (convert-to-shares (assets uint))
-  (/ (* assets share-base) (contract-call? .state-v1 get-share-price))
+  (/ (* assets share-base) (contract-call? .state get-share-price))
 )
 
 ;; @desc - calculate how many assets (sBTC) a given number of shares is worth
 ;; @param - shares: number of shares (hBTC tokens) to convert
 ;; @return - amount of underlying asset (sBTC) that would be received
 (define-read-only (convert-to-assets (shares uint))
-  (/ (* shares (contract-call? .state-v1 get-share-price)) share-base)
+  (/ (* shares (contract-call? .state get-share-price)) share-base)
 )
 
 (define-read-only (get-claim (id uint))
@@ -76,17 +76,17 @@
 ;; @param - affiliate: affiliate of the deposit transaction (optional)
 (define-public (deposit (assets uint) (affiliate (optional (buff 64))))
   (let (
-    (state (contract-call? .state-v1 get-deposit-state))
+    (state (contract-call? .state get-deposit-state))
     (shares (/ (* assets share-base) (get share-price state)))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
-    (try! (contract-call? .blacklist-v1 check-is-not-soft contract-caller))
-    (try! (contract-call? .state-v1 check-is-deposit-active))
+    (try! (contract-call? .blacklist check-is-not-soft contract-caller))
+    (try! (contract-call? .state check-is-deposit-active))
     (asserts! (<= (+ (get total-assets state) assets) (get deposit-cap state)) ERR_DEPOSIT_CAP_EXCEEDED)
     (asserts! (>= assets (get min-amount state)) ERR_BELOW_MIN_AMOUNT)
 
     (try! (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer assets contract-caller reserve none))
-    (try! (contract-call? .state-v1 update-state
+    (try! (contract-call? .state update-state
       (list
         { type: "total-assets", amount: assets, is-add: true })
       none
@@ -101,7 +101,7 @@
 ;; @param - shares: number of hBTC tokens to burn
 (define-private (create-claim (assets uint) (shares uint) (exit-fee uint) (cooldown uint))
   (let (
-    (new-claim-id (try! (contract-call? .state-v1 increment-claim-id)))
+    (new-claim-id (try! (contract-call? .state increment-claim-id)))
     (fee (/ (* assets exit-fee) bps-base))
     (assets-net (- assets fee))
     (ts (+ (get-current-ts) cooldown))
@@ -115,7 +115,7 @@
         is-funded: false
       }
     )
-    (try! (contract-call? .state-v1 update-state 
+    (try! (contract-call? .state update-state 
       (list 
         { type: "pending-claims", amount: assets, is-add: true })
       none
@@ -130,12 +130,12 @@
 ;; @param - is-express: whether the claim is express
 (define-public (init-withdraw (assets uint) (is-express bool))
   (let (
-    (state (contract-call? .state-v1 get-withdraw-state contract-caller is-express))
+    (state (contract-call? .state get-withdraw-state contract-caller is-express))
     (shares (/ (* assets share-base) (get share-price state)))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
-    (try! (contract-call? .blacklist-v1 check-is-not-soft contract-caller))
-    (try! (contract-call? .state-v1 check-is-withdraw-active))
+    (try! (contract-call? .blacklist check-is-not-soft contract-caller))
+    (try! (contract-call? .state check-is-withdraw-active))
 
     (let ((claim-id (try! (create-claim assets shares (get exit-fee state) (get cooldown state)))))
       (print { action: "init-withdraw", user: contract-caller, data: { claim-id: claim-id, assets: assets, shares: shares, is-express: is-express } })
@@ -149,12 +149,12 @@
 ;; @param - is-express: whether the claim is express
 (define-public (init-redeem (shares uint) (is-express bool))
   (let (
-    (state (contract-call? .state-v1 get-withdraw-state contract-caller is-express))
+    (state (contract-call? .state get-withdraw-state contract-caller is-express))
     (assets (/ (* shares (get share-price state)) share-base))
   )
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
-    (try! (contract-call? .blacklist-v1 check-is-not-soft contract-caller))
-    (try! (contract-call? .state-v1 check-is-withdraw-active))
+    (try! (contract-call? .blacklist check-is-not-soft contract-caller))
+    (try! (contract-call? .state check-is-withdraw-active))
 
     (let ((claim-id (try! (create-claim assets shares (get exit-fee state) (get cooldown state)))))
       (print { action: "init-redeem", user: contract-caller, data: { claim-id: claim-id, assets: assets, shares: shares, is-express: is-express } })
@@ -190,7 +190,7 @@
     (user (get user current-claim))
     (assets-net (- assets fee))
   )
-    (try! (contract-call? .state-v1 check-is-withdraw-active))
+    (try! (contract-call? .state check-is-withdraw-active))
     (asserts! (>= (get-current-ts) (get ts current-claim)) ERR_NOT_COOLED_DOWN)
     (asserts! (get is-funded current-claim) ERR_NOT_FUNDED)
     (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer assets-net this-contract user none)))
@@ -226,13 +226,13 @@
     (claim (try! (get-claim claim-id)))
     (assets (get assets claim))
     (is-cooled-down (>= (get-current-ts) (get ts claim)))
-    (is-manager (get manager (contract-call? .hq-hbtc-v1 get-keeper contract-caller)))
+    (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
   )
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
     (if is-manager true (asserts! is-cooled-down ERR_NOT_COOLED_DOWN)) ;; if the caller is a manager, skip the cooldown check
 
-    (try! (contract-call? .reserve-v1 transfer sbtc-token assets this-contract))
-    (try! (contract-call? .state-v1 update-state 
+    (try! (contract-call? .reserve transfer sbtc-token assets this-contract))
+    (try! (contract-call? .state update-state 
       (list
         { type: "total-assets", amount: assets, is-add: false }
         { type: "pending-claims", amount: assets, is-add: false })

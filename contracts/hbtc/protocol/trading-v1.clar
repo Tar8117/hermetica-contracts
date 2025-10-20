@@ -26,12 +26,12 @@
   (usdh-amount uint)
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> usdh-amount u0) ERR_INVALID_AMOUNT)
     ;; Borrow USDh from Zest v2 market
-    (try! (contract-call? .zest-interface-v1 zest-borrow market-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-borrow market-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
     ;; Stake the borrowed USDh into Hermetica
-    (try! (contract-call? .hermetica-interface-v1 hermetica-stake usdh-amount staking-trait))
+    (try! (contract-call? .hermetica-interface hermetica-stake usdh-amount staking-trait))
     (ok true)
   )
 )
@@ -43,13 +43,13 @@
   (susdh-amount uint)
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> susdh-amount u0) ERR_INVALID_AMOUNT)
     (let (
       ;; Unstake sUSDh from Hermetica (instant withdrawal)
-      (usdh-amount (try! (contract-call? .hermetica-interface-v1 hermetica-unstake-and-withdraw susdh-amount staking-trait staking-silo-trait))))
+      (usdh-amount (try! (contract-call? .hermetica-interface hermetica-unstake-and-withdraw susdh-amount staking-trait staking-silo-trait))))
       ;; Repay USDh loan to Zest v2 market
-      (try! (contract-call? .zest-interface-v1 zest-repay market-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
+      (try! (contract-call? .zest-interface zest-repay market-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
       (ok true)
     )
   )
@@ -69,12 +69,12 @@
   (sbtc-amount uint) (usdh-amount uint)
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> sbtc-amount u0) ERR_INVALID_AMOUNT)
     (asserts! (> usdh-amount u0) ERR_INVALID_AMOUNT)
 
     ;; Step 1: Add sBTC directly as collateral
-    (try! (contract-call? .zest-interface-v1 zest-collateral-add market-trait sbtc-token-trait sbtc-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-collateral-add market-trait sbtc-token-trait sbtc-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Borrow USDh and stake it in Hermetica
     (try! (zest-open market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
@@ -96,7 +96,7 @@
   (claim-ids (list 100 uint))
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> susdh-amount u0) ERR_INVALID_AMOUNT)
     (asserts! (> collateral-amount u0) ERR_INVALID_AMOUNT)
 
@@ -104,12 +104,12 @@
     (try! (zest-close market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Remove sBTC collateral
-    (try! (contract-call? .zest-interface-v1 zest-collateral-remove market-trait sbtc-token-trait collateral-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-collateral-remove market-trait sbtc-token-trait collateral-amount price-feed-1 price-feed-2))
     
     ;; Step 3: Optional - Fund claims with sBTC now in reserve
     (if (> (len claim-ids) u0)
       (begin
-        (try! (contract-call? .hq-hbtc-v1 check-is-protocol (contract-of hbtc-vault-trait)))
+        (try! (contract-call? .hq-hbtc check-is-protocol (contract-of hbtc-vault-trait)))
         (try! (contract-call? hbtc-vault-trait fund-claim-many claim-ids))
       )
       true)
@@ -134,15 +134,15 @@
   (sbtc-amount uint) (usdh-amount uint) (min-shares uint)
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> sbtc-amount u0) ERR_INVALID_AMOUNT)
     (asserts! (> usdh-amount u0) ERR_INVALID_AMOUNT)
     (let (
       ;; Step 1: Deposit sBTC to vault and get z-tokens
-      (z-tokens-received (try! (contract-call? .zest-interface-v1 zest-deposit vault-trait z-token-trait sbtc-token-trait sbtc-amount min-shares price-feed-1 price-feed-2))))
+      (z-tokens-received (try! (contract-call? .zest-interface zest-deposit vault-trait z-token-trait sbtc-token-trait sbtc-amount min-shares price-feed-1 price-feed-2))))
       
       ;; Step 1b: Add z-tokens as collateral to Zest market
-      (try! (contract-call? .zest-interface-v1 zest-collateral-add market-trait z-token-trait z-tokens-received price-feed-1 price-feed-2))
+      (try! (contract-call? .zest-interface zest-collateral-add market-trait z-token-trait z-tokens-received price-feed-1 price-feed-2))
 
       ;; Step 2: Borrow USDh and stake it in Hermetica
       (try! (zest-open market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
@@ -165,7 +165,7 @@
   (claim-ids (list 100 uint))
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> susdh-amount u0) ERR_INVALID_AMOUNT)
     (asserts! (> collateral-amount u0) ERR_INVALID_AMOUNT)
 
@@ -173,15 +173,15 @@
     (try! (zest-close market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Remove z-token collateral
-    (try! (contract-call? .zest-interface-v1 zest-collateral-remove market-trait z-token-trait collateral-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-collateral-remove market-trait z-token-trait collateral-amount price-feed-1 price-feed-2))
     
     ;; Step 3: Redeem sBTC from vault (burn z-tokens, get actual sBTC amount)
-    (try! (contract-call? .zest-interface-v1 zest-redeem vault-trait z-token-trait sbtc-token-trait collateral-amount min-sbtc-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-redeem vault-trait z-token-trait sbtc-token-trait collateral-amount min-sbtc-amount price-feed-1 price-feed-2))
     
     ;; Step 4: Optional - Fund claims with sBTC now in reserve
     (if (> (len claim-ids) u0)
       (begin
-        (try! (contract-call? .hq-hbtc-v1 check-is-protocol (contract-of hbtc-vault-trait)))
+        (try! (contract-call? .hq-hbtc check-is-protocol (contract-of hbtc-vault-trait)))
         (try! (contract-call? hbtc-vault-trait fund-claim-many claim-ids))
       )
       true)

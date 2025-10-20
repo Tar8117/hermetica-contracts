@@ -310,7 +310,7 @@
 
 (define-read-only (check-is-vault-active)
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-protocol-active))
+    (try! (contract-call? .hq-hbtc check-is-protocol-active))
     (ok (asserts! (get-vault-active) ERR_VAULT_DISABLED))
   )
 )
@@ -476,7 +476,7 @@
     (init-share-price (get-share-price))
     (init-total-assets (get-total-assets))
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-protocol contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-protocol contract-caller))
     (asserts! (> (len operations) u0) ERR_NO_OPERATIONS)
     
     ;; Execute ALL operations before checking
@@ -517,7 +517,7 @@
     (current-id (get-claim-id))
     (new-id (+ current-id u1))
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-protocol contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-protocol contract-caller))
     (var-set claim-id new-id)
     (print { action: "increment-claim-id", user: contract-caller, data: { old: current-id, new: new-id } })
     (ok new-id)
@@ -529,8 +529,8 @@
 
 (define-public (set-fee-address (address principal))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
-    (try! (contract-call? .hq-hbtc-v1 check-is-standard address))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-standard address))
     (print { action: "set-fee-address", user: contract-caller, data: { old: (get-fee-address), new: address } })
     (ok (var-set fee-address address))
   )
@@ -540,7 +540,7 @@
   (let (
     (new-fees { mgmt-fee: mgmt-fee, perf-fee: perf-fee, exit-fee: exit-fee, express-fee: express-fee })
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= mgmt-fee (get mgmt-fee max)) ERR_ABOVE_MAX)
     (asserts! (<= perf-fee (get perf-fee max)) ERR_ABOVE_MAX)
     (asserts! (<= exit-fee (get exit-fee max)) ERR_ABOVE_MAX)
@@ -552,7 +552,7 @@
 
 (define-public (set-custom-exit-fee (address principal) (exit-fee uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-fee-setter contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-fee-setter contract-caller))
     (asserts! (<= exit-fee (get exit-fee max) ) ERR_ABOVE_MAX)
     (print { action: "set-custom-exit-fee", user: contract-caller, data: { address: address, old: (get-custom-exit-fee address false), new: exit-fee } })
     (ok (map-set custom-exit-fee { address: address } { exit-fee: exit-fee }))
@@ -561,7 +561,7 @@
 
 (define-public (set-cooldown (new-cooldown uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= new-cooldown (get cooldown max) ) ERR_ABOVE_MAX)
     (print { action: "set-cooldown", user: contract-caller, data: { old: (get-cooldown), new: new-cooldown } })
     (ok (var-set cooldown new-cooldown))
@@ -570,7 +570,7 @@
 
 (define-public (set-express-cooldown (new-cooldown uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= new-cooldown (get cooldown max)) ERR_ABOVE_MAX)
     (print { action: "set-express-cooldown", user: contract-caller, data: { old: (get-express-cooldown), new: new-cooldown } })
     (ok (var-set express-cooldown new-cooldown))
@@ -579,7 +579,7 @@
 
 (define-public (set-custom-cooldown (address principal) (new-cooldown uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= new-cooldown (get cooldown max) ) ERR_ABOVE_MAX)
     (print { action: "set-custom-cooldown", user: contract-caller, data: { address: address, old: (get-custom-cooldown address false), new: new-cooldown } })
     (ok (map-set custom-cooldown {  address: address } { cooldown: new-cooldown }))
@@ -588,7 +588,7 @@
 
 (define-public (set-deposit-cap (new-deposit-cap uint))  
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-deposit-cap", user: contract-caller, data: { old: (get-deposit-cap), new: new-deposit-cap } })
     (ok (var-set deposit-cap new-deposit-cap))
   )
@@ -596,7 +596,7 @@
 
 (define-public (set-min-amount (new-min-amount uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-min-amount", user: contract-caller, data: { old: (get-min-amount), new: new-min-amount } })
     (ok (var-set min-amount new-min-amount))
   )
@@ -604,7 +604,7 @@
 
 (define-public (set-max-reward (new-max-reward uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (asserts! (<= new-max-reward (get reward max) ) ERR_ABOVE_MAX)
     (print { action: "set-max-reward", user: contract-caller, data: { old: (get-max-reward), new: new-max-reward } })
     (ok (var-set max-reward new-max-reward))
@@ -613,7 +613,7 @@
 
 (define-public (set-max-deviation (new-max-deviation uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (asserts! (<= new-max-deviation (get deviation max)) ERR_ABOVE_MAX)
     (print { action: "set-max-deviation", user: contract-caller, data: { old: (get-max-deviation), new: new-max-deviation } })
     (ok (var-set max-deviation new-max-deviation))
@@ -622,7 +622,7 @@
 
 (define-public (set-update-window (new-update-window uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (asserts! (>= new-update-window (get update-window min) ) ERR_BELOW_MIN)
     (print { action: "set-update-window", user: contract-caller, data: { old: (get-update-window), new: new-update-window } })
     (ok (var-set update-window new-update-window))
@@ -631,7 +631,7 @@
 
 (define-public (set-reserve-rate (new-reserve-rate uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= new-reserve-rate (get reserve-rate max)) ERR_ABOVE_MAX)
     (print { action: "set-reserve-rate", user: contract-caller, data: { old: (get-reserve-rate), new: new-reserve-rate } })
     (ok (var-set reserve-rate new-reserve-rate))
@@ -640,7 +640,7 @@
 
 (define-public (set-block-delay (new-block-delay uint))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= new-block-delay (get block-delay max) ) ERR_ABOVE_MAX)
     (print { action: "set-block-delay", user: contract-caller, data: { old: (get-block-delay), new: new-block-delay } })
     (ok (var-set block-delay new-block-delay))
@@ -649,7 +649,7 @@
 
 (define-public (set-vault-active (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-vault-active", user: contract-caller, data: { old: (get-vault-active), new: active } })
     (ok (var-set vault-active active))
   )
@@ -657,7 +657,7 @@
 
 (define-public (disable-vault)
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-guardian contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-guardian contract-caller))
     (print { action: "disable-vault", user: contract-caller, data: { old: (get-vault-active), new: false } })
     (ok (var-set vault-active false))
   )
@@ -665,7 +665,7 @@
 
 (define-public (set-transfer-active (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-transfer-active", user: contract-caller, data: { old: (get-transfer-active), new: active } })
     (ok (var-set transfer-active active))
   )
@@ -673,7 +673,7 @@
 
 (define-public (disable-transfer)
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-guardian contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-guardian contract-caller))
     (print { action: "disable-transfer", user: contract-caller, data: { old: (get-transfer-active), new: false } })
     (ok (var-set transfer-active false))
   )
@@ -681,7 +681,7 @@
 
 (define-public (set-deposit-active (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-deposit-active", user: contract-caller, data: { old: (get-deposit-active), new: active } })
     (ok (var-set deposit-active active))
   )
@@ -689,7 +689,7 @@
 
 (define-public (disable-deposits)
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-guardian contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-guardian contract-caller))
     (print { action: "disable-deposits", user: contract-caller, data: { old: (get-deposit-active), new: false } })
     (ok (var-set deposit-active false))
   )
@@ -697,7 +697,7 @@
 
 (define-public (set-withdraw-active (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-withdraw-active", user: contract-caller, data: { old: (get-withdraw-active), new: active } })
     (ok (var-set withdraw-active active))
   )
@@ -705,7 +705,7 @@
 
 (define-public (disable-withdraw)
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-guardian contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-guardian contract-caller))
     (print { action: "disable-withdraw", user: contract-caller, data: { old: (get-withdraw-active), new: false } })
     (ok (var-set withdraw-active false))
 
@@ -714,7 +714,7 @@
 
 (define-public (set-trading-active (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-trading-active", user: contract-caller, data: { old: (get-trading-active), new: active } })
     (ok (var-set trading-active active))
   )
@@ -722,7 +722,7 @@
 
 (define-public (disable-trading)
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-guardian contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-guardian contract-caller))
     (print { action: "disable-trading", user: contract-caller, data: { old: (get-trading-active), new: false } })
     (ok (var-set trading-active false))
   )
@@ -734,7 +734,7 @@
     (token-base (pow u10 (unwrap-panic (contract-call? token get-decimals))))
     (new-entry { active: false, ts: (some (get-current-ts)), price-feed-id: price-feed-id, token-base: token-base, max-slippage: max-slippage, is-stablecoin: is-stablecoin })
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (asserts! (<= max-slippage (get slippage max) ) ERR_ABOVE_MAX)
     (print { action: "request-new-asset", user: contract-caller, data: { token-address: token-address, old: (get-asset token-address), new: new-entry } })
     (ok (asserts! (map-insert assets { address: token-address } new-entry) ERR_DUPLICATE))
@@ -743,7 +743,7 @@
 
 (define-public (remove-asset (address principal))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (print { action: "remove-asset", user: contract-caller, data: { address: address, old: (get-asset address) } })
     (ok (map-delete assets { address: address }))
   )
@@ -755,8 +755,8 @@
     (ts (unwrap! (get ts entry) ERR_NO_ENTRY))
     (updated-entry (merge entry { active: true }))
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
-    (try! (contract-call? .hq-hbtc-v1 check-activation-delay ts))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-activation-delay ts))
     (print { action: "activate-asset", user: contract-caller, data: { address: address, old: entry, new: updated-entry } })
     (ok (map-set assets { address: address } updated-entry))
   )
@@ -767,7 +767,7 @@
     (entry (get-asset address))
     (updated-entry (merge entry { max-slippage: max-slippage }))
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (asserts! (<= max-slippage (get slippage max) ) ERR_ABOVE_MAX)
     (print { action: "set-max-slippage", user: contract-caller, data: { address: address, old: entry, new: updated-entry } })
     (ok (map-set assets { address: address } updated-entry))
@@ -778,7 +778,7 @@
   (let (
     (new-entry { active: false, ts: (some (get-current-ts)) })
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (print { action: "request-new-contract", user: contract-caller, data: { address: address, old: (get-contract address), new: new-entry } })
     (ok (asserts! (map-insert contracts { address: address } new-entry) ERR_DUPLICATE))
   )
@@ -786,7 +786,7 @@
 
 (define-public (remove-contract (address principal))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (print { action: "remove-contract", user: contract-caller, data: { address: address, old: (get-contract address) } })
     (ok (map-delete contracts { address: address }))
   )
@@ -798,8 +798,8 @@
     (ts (unwrap! (get ts entry) ERR_NO_ENTRY))
     (updated-entry (merge entry { active: true }))
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
-    (try! (contract-call? .hq-hbtc-v1 check-activation-delay ts))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-activation-delay ts))
     (print { action: "activate-contract", user: contract-caller, data: { address: address, old: entry, new: updated-entry } })
     (ok (map-set contracts { address: address } updated-entry))
   )

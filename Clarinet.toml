@@ -119,59 +119,59 @@ epoch = 3.1
 
 # hbtc protocol
 
-[contracts.blacklist-v1]
+[contracts.blacklist]
 path = 'contracts/hbtc/protocol/blacklist-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.controller-v1]
+[contracts.controller-hbtc]
 path = 'contracts/hbtc/protocol/controller-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.fee-collector-v1]
+[contracts.fee-collector]
 path = 'contracts/hbtc/protocol/fee-collector-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.hq-hbtc-v1]
-path = 'contracts/hbtc/protocol/hq-hbtc-v1.clar'
+[contracts.hq-hbtc]
+path = 'contracts/hbtc/protocol/hq-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.reserve-fund-v1]
+[contracts.reserve-fund]
 path = 'contracts/hbtc/protocol/reserve-fund-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.reserve-v1]
+[contracts.reserve]
 path = 'contracts/hbtc/protocol/reserve-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.state-v1]
+[contracts.state]
 path = 'contracts/hbtc/protocol/state-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.trading-v1]
+[contracts.trading]
 path = 'contracts/hbtc/protocol/trading-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.vault-v1]
+[contracts.vault]
 path = 'contracts/hbtc/protocol/vault-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
 # hbtc interfaces
 
-[contracts.hermetica-interface-v1]
+[contracts.hermetica-interface]
 path = 'contracts/hbtc/protocol/interfaces/hermetica-interface-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-[contracts.zest-interface-v1]
+[contracts.zest-interface]
 path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1.clar'
 clarity_version = 3
 epoch = 3.2

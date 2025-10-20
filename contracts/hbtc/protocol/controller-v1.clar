@@ -12,9 +12,9 @@
 (define-constant bps-base (pow u10 u4))
 (define-constant pct-base (pow u10 u2))
 (define-constant share-base (pow u10 u8))
-(define-constant fee-collector .fee-collector-v1)
-(define-constant rf .reserve-fund-v1)
-(define-constant reserve .reserve-v1)
+(define-constant fee-collector .fee-collector)
+(define-constant rf .reserve-fund)
+(define-constant reserve .reserve)
 (define-constant sbtc-token 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token)
 
 ;;-------------------------------------
@@ -24,7 +24,7 @@
 ;; @desc - log the reward and update the token price
 (define-public (log-reward (reward uint) (is-positive bool))
   (let (
-    (state (contract-call? .state-v1 get-reward-state))
+    (state (contract-call? .state get-reward-state))
     (total-assets (get total-assets state))
     (fees (get fees state))
     (pending-rf (get pending-rf state))
@@ -40,9 +40,9 @@
         (+ mgmt-fee reward))))
     (total-rf (+ (get-sbtc-balance rf) pending-rf))
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-protocol-active))
-    (try! (contract-call? .hq-hbtc-v1 check-is-rewarder contract-caller))
-    (try! (contract-call? .state-v1 check-max-reward reward))
+    (try! (contract-call? .hq-hbtc check-is-protocol-active))
+    (try! (contract-call? .hq-hbtc check-is-rewarder contract-caller))
+    (try! (contract-call? .state check-max-reward reward))
 
     (asserts! (or (> reward u0) is-positive) ERR_ZERO_ONLY_POSITIVE)
 
@@ -66,21 +66,21 @@
 ;; @desc - Process any accumulated unpaid fees and RF when funds are available
 (define-public (fund-transfers)
   (let (
-    (pending (contract-call? .state-v1 get-pending))
+    (pending (contract-call? .state get-pending))
     (pending-fees (get fees pending))
     (pending-rf (get rf pending))
     (total-reserve (get-sbtc-balance reserve))
     (total-pending (+ pending-fees pending-rf))
   )
-    (try! (contract-call? .hq-hbtc-v1 check-is-rewarder contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-rewarder contract-caller))
 
     (asserts! (> total-pending u0) ERR_NO_PENDING_TRANSFERS)
     (asserts! (>= total-reserve total-pending) ERR_INSUFFICIENT_FUNDS)
 
-    (if (> pending-fees u0) (try! (contract-call? .reserve-v1 transfer sbtc-token pending-fees fee-collector)) true)
-    (if (> pending-rf u0) (try! (contract-call? .reserve-v1 transfer sbtc-token pending-rf rf)) true)
+    (if (> pending-fees u0) (try! (contract-call? .reserve transfer sbtc-token pending-fees fee-collector)) true)
+    (if (> pending-rf u0) (try! (contract-call? .reserve transfer sbtc-token pending-rf rf)) true)
 
-    (try! (contract-call? .state-v1 update-state 
+    (try! (contract-call? .state update-state 
       (list
         { type: "pending-fees", amount: pending-fees, is-add: false }
         { type: "pending-rf", amount: pending-rf, is-add: false }
@@ -114,7 +114,7 @@
       data: { reward: { gross: reward, rf: reward-rf, net: reward-net, is-positive: true }, fees: { perf: perf-fee, mgmt: mgmt-fee }, rf: { old: total-rf, new: (+ total-rf reward-rf)  } }
     })
     ;; Single batch call with commit-reward logic
-    (ok (try! (contract-call? .state-v1 update-state 
+    (ok (try! (contract-call? .state update-state 
       (list
         { type: "pending-fees", amount: (+ perf-fee mgmt-fee), is-add: true }
         { type: "pending-rf", amount: reward-rf, is-add: true })
@@ -142,12 +142,12 @@
     
     ;; Physical transfer if needed
     (if (> transfer-amount u0)
-      (try! (contract-call? .reserve-fund-v1 transfer sbtc-token transfer-amount reserve none))
+      (try! (contract-call? .reserve-fund transfer sbtc-token transfer-amount reserve none))
       true
     )
     
     ;; Single batch call with commit-reward logic (net reward = 0)
-    (try! (contract-call? .state-v1 update-state 
+    (try! (contract-call? .state update-state 
       (list
         { type: "pending-rf", amount: rf-decrease, is-add: false }
         { type: "pending-fees", amount: mgmt-fee, is-add: true })
@@ -172,11 +172,11 @@
       data: { reward: { gross: reward, net: loss, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: u0 } }
     })
     (if (> total-rf pending-rf)
-      (try! (contract-call? .reserve-fund-v1 transfer sbtc-token (- total-rf pending-rf) reserve none))
+      (try! (contract-call? .reserve-fund transfer sbtc-token (- total-rf pending-rf) reserve none))
       true
     )
 
-    (ok (try! (contract-call? .state-v1 update-state 
+    (ok (try! (contract-call? .state update-state 
       (list
         { type: "pending-fees", amount: mgmt-fee, is-add: true }
         { type: "pending-rf", amount: pending-rf, is-add: false })

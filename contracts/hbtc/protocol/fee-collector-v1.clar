@@ -16,9 +16,9 @@
   (let (
     (asset-contract (contract-of asset))
     (balance (try! (contract-call? asset get-balance this-contract)))
-    (fee-address (contract-call? .state-v1 get-fee-address))
+    (fee-address (contract-call? .state get-fee-address))
   )
-    (try! (contract-call? .state-v1 check-transfer-auth asset-contract))
+    (try! (contract-call? .state check-transfer-auth asset-contract))
     (asserts! (> balance u0) ERR_INSUFFICIENT_BALANCE)
     (print { action: "withdraw", user: contract-caller, data: { asset: asset, amount: balance, recipient: fee-address, sender: this-contract, balance: balance }})
     (ok (try! (as-contract (contract-call? asset transfer balance tx-sender fee-address none))))
