@@ -5,7 +5,7 @@
 | 09/2025 | [Clarity Alliance](https://www.clarityalliance.org/hermetica-usdh-upgrade) | [Staking-v1-1](https://clarity-alliance.github.io/audits/Clarity%20Alliance%20-%20Hermetica%20USDh%20(Upgrade).pdf)| [Link](https://github.com/hermetica-fi/hermetica-contracts/commit/1b9a84f91204ed326952d0d1e0adc464df5c7a52) |
 | 03/2025 | [Clarity Alliance](https://www.clarityalliance.org/hermeticaminting) | [Minting-auto](https://github.com/Clarity-Alliance/audits/blob/main/Clarity%20Alliance%20-%20Hermetica%20USDh%20Minting%20Contract.pdf)| [Link](https://github.com/hermetica-fi/hermetica-usdh-contracts/commit/2d51015b223b844f9c3ed026669a97b1b594d41b) |
 | 06/2024 | [StrataLabs](https://www.stratalabs.org/) | [USDh protocol](https://2201013687-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2Fxp26OjT5H1o55M1QMDI4%2Fuploads%2FsxllbdrJOMTz2f6U8MRR%2FHermetica%20x%20StrataLabs%20-%20Audit%20Report.pdf?alt=media&token=b906f43e-aebc-4d96-a050-223689442378) | [Link](https://github.com/hermetica-fi/hermetica-usdh-contracts/commit/83c3cad999b6797e68527ecbccbba34b2bdd2611) |
-| 06/2024 | [Clarity Alliance](https://www.clarityalliance.org/) | [USDh protocol](https://github.com/Clarity-Alliance/audits/blob/main/Clarity%20Alliance%20-%20Hermetica.pdf) | [Link](https://github.com/hermetica-fi/hermetica-usdh-contracts/commit/83c3cad999b6797e68527ecbccbba34b2bdd2611) |
+| 06/2024 | [Clarity Alliance](https://www.clarityalliance.org/hermetica) | [USDh protocol](https://github.com/Clarity-Alliance/audits/blob/main/Clarity%20Alliance%20-%20Hermetica.pdf) | [Link](https://github.com/hermetica-fi/hermetica-usdh-contracts/commit/83c3cad999b6797e68527ecbccbba34b2bdd2611) |
 
 ## Staking-v1-1 Upgrade Remediations (Clarity Alliance - 09/2025)
 
