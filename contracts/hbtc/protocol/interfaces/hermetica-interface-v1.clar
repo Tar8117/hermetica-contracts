@@ -3,12 +3,12 @@
 ;; @desc Interface for Hermetica protocol integration
 
 (use-trait ft .sip-010-trait.sip-010-trait)
-(use-trait pyth-storage .pyth-traits-v2.storage-trait)
-(use-trait pyth-decoder .pyth-traits-v2.decoder-trait)
-(use-trait wormhole-core .wormhole-traits-v2.core-trait)
-(use-trait staking .staking-trait-v1.staking-trait)
-(use-trait staking-silo .staking-silo-trait-v1.staking-silo-trait)
-(use-trait minting-auto .minting-auto-trait-v1.minting-auto-trait)
+(use-trait pyth-storage 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-traits-v2.storage-trait)
+(use-trait pyth-decoder 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-traits-v2.decoder-trait)
+(use-trait wormhole-core 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.wormhole-traits-v2.core-trait)
+(use-trait staking .staking-trait.staking-trait)
+(use-trait staking-silo .staking-silo-trait.staking-silo-trait)
+(use-trait minting-auto .minting-auto-trait.minting-auto-trait)
 
 ;;-------------------------------------
 ;; Constants
@@ -21,8 +21,8 @@
 (define-constant usdh-base (pow u10 u8))
 
 (define-constant reserve .reserve)
-(define-constant usdh-token .usdh-token-v1)
-(define-constant susdh-token .susdh-token-v1)
+(define-constant usdh-token .usdh-token)
+(define-constant susdh-token .susdh-token)
 
 ;;-------------------------------------
 ;; Trader
@@ -39,7 +39,7 @@
     (try! (contract-call? .state check-trading-auth (contract-of staking-trait) none none none))
     (try! (contract-call? .reserve transfer usdh-token amount this-contract))
     (try! (as-contract (contract-call? staking-trait stake amount none)))
-    (try! (as-contract (contract-call? .susdh-token-v1 transfer susdh-amount this-contract reserve none)))
+    (try! (as-contract (contract-call? .susdh-token transfer susdh-amount this-contract reserve none)))
     (print { action: "hermetica-stake", user: contract-caller, data: { usdh-amount: amount, susdh-amount: susdh-amount, ratio: ratio, staking: staking-trait } })
     (ok susdh-amount)
   )
@@ -68,7 +68,7 @@
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of staking-silo-trait) none none none))
     (try! (as-contract (contract-call? staking-silo-trait withdraw claim-id)))
-    (try! (as-contract (contract-call? .usdh-token-v1 transfer amount this-contract reserve none)))
+    (try! (as-contract (contract-call? .usdh-token transfer amount this-contract reserve none)))
     (print { action: "hermetica-withdraw", user: contract-caller, data: { amount: amount, claim-id: claim-id, staking-silo: staking-silo-trait } })
     (ok amount)
   )
@@ -87,7 +87,7 @@
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of staking-trait) (some (contract-of staking-silo-trait)) none none))
     (try! (as-contract (contract-call? staking-silo-trait withdraw claim-id)))
-    (try! (as-contract (contract-call? .usdh-token-v1 transfer usdh-amount this-contract reserve none)))
+    (try! (as-contract (contract-call? .usdh-token transfer usdh-amount this-contract reserve none)))
     (print { action: "hermetica-unstake-and-withdraw", user: contract-caller, data: { susdh-amount: amount, usdh-expected: usdh-amount, usdh-received: usdh-amount, ratio: ratio, staking: staking-trait, staking-silo: staking-silo-trait, claim-id: claim-id } })
     (ok usdh-amount)
   )
@@ -117,7 +117,7 @@
     (try! (contract-call? .state check-trading-auth (contract-of minting-auto-trait) none (some (contract-of minting-asset-trait)) none))
     (try! (contract-call? .reserve transfer minting-asset-trait amount-asset this-contract))
     (try! (as-contract (contract-call? minting-auto-trait mint minting-asset-trait amount-usdh slippage-tolerance memo price-feed execution-plan)))
-    (try! (as-contract (contract-call? .usdh-token-v1 transfer amount-usdh this-contract reserve none)))
+    (try! (as-contract (contract-call? .usdh-token transfer amount-usdh this-contract reserve none)))
     (print { action: "hermetica-mint", user: contract-caller, data: { minting-asset: minting-asset-trait, amount-asset: amount-asset, usdh-received: amount-usdh, minting-contract: minting-auto-trait } })
     (ok amount-usdh)
   )

@@ -1,7 +1,7 @@
 ;; @contract Staking
 ;; @version 1.1
 
-(impl-trait .staking-trait-v1.staking-trait)
+(impl-trait .staking-trait.staking-trait)
 
 ;;-------------------------------------
 ;; Constants & Variables

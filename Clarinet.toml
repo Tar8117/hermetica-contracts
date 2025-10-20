@@ -11,6 +11,24 @@ contract_id = 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3'
 [[project.requirements]]
 contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4'
 
+[[project.requirements]]
+contract_id = 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token'
+
+[[project.requirements]]
+contract_id = 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.ft-trait'
+
+[[project.requirements]]
+contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-storage-v4'
+
+[[project.requirements]]
+contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-pnau-decoder-v3'
+
+[[project.requirements]]
+contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.wormhole-core-v4'
+
+[[project.requirements]]
+contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-traits-v2'
+
 # protocol
 
 [contracts.minting-state]
@@ -36,27 +54,27 @@ epoch = 2.5
 [contracts.minting]
 path = 'contracts/usdh/protocol/minting-v1.clar'
 clarity_version = 3
-epoch = 3.0
+epoch = 3.1
 
 [contracts.minting-auto]
 path = 'contracts/usdh/protocol/minting-auto-v1-1.clar'
 clarity_version = 3
-epoch = 3.0
+epoch = 3.1
 
 [contracts.minting-auto-state]
 path = 'contracts/usdh/protocol/minting-auto-state-v1.clar'
 clarity_version = 3
-epoch = 3.0
+epoch = 3.1
 
 [contracts.redeeming-reserve]
 path = 'contracts/usdh/protocol/redeeming-reserve-v1-2.clar'
 clarity_version = 2
-epoch = 2.5
+epoch = 3.1
 
 [contracts.staking]
 path = 'contracts/usdh/protocol/staking-v1-1.clar'
 clarity_version = 2
-epoch = 2.5
+epoch = 3.1
 
 [contracts.staking-silo]
 path = 'contracts/usdh/protocol/staking-silo-v1-1.clar'
@@ -116,6 +134,16 @@ epoch = 2.5
 path = 'contracts/usdh/traits/staking-trait-v1.clar'
 clarity_version = 3
 epoch = 3.1
+
+[contracts.staking-silo-trait]
+path = 'contracts/usdh/traits/staking-silo-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.minting-auto-trait]
+path = 'contracts/usdh/traits/minting-auto-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
 
 # hbtc protocol
 
@@ -200,16 +228,17 @@ path = 'contracts/hbtc/traits/zest-vault-trait-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
-# pyth
+[repl.analysis]
+passes = ['check_checker']
 
-[[project.requirements]]
-contract_id = 'SP2T5JKWWP3FYYX4YRK8GK5BG2YCNGEAEY2P2PKN0.pyth-oracle-v2'
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
 
-[[project.requirements]]
-contract_id = 'SP2J933XB2CP2JQ1A4FGN8JA968BBG3NK3EKZ7Q9F.hk-cursor-v2'
-
-[[project.requirements]]
-contract_id = 'SP2J933XB2CP2JQ1A4FGN8JA968BBG3NK3EKZ7Q9F.hk-ecc-v1'
-
-[[project.requirements]]
-contract_id = 'SP2J933XB2CP2JQ1A4FGN8JA968BBG3NK3EKZ7Q9F.hk-merkle-tree-keccak160-v1'
+[repl.remote_data]
+enabled = true
+use_mainnet_wallets = true
+api_url = 'https://api.hiro.so'
+initial_height = 3200000

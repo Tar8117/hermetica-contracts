@@ -1,6 +1,5 @@
-;; @contract StakingTrait
-;; @version 1.0
-;; @description Trait contract for staking functionality
+;; @contract Staking Trait
+;; @version 1
 
 ;;-------------------------------------
 ;; Trait Definition

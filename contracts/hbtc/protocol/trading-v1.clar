@@ -6,8 +6,8 @@
 (use-trait zest-market .zest-market-trait-v1.zest-market-trait)
 (use-trait zest-vault .zest-vault-trait-v1.zest-vault-trait)
 (use-trait hbtc-vault .vault-trait-v1.vault-trait)
-(use-trait staking .staking-trait-v1.staking-trait)
-(use-trait staking-silo .staking-silo-trait-v1.staking-silo-trait)
+(use-trait staking .staking-trait.staking-trait)
+(use-trait staking-silo .staking-silo-trait.staking-silo-trait)
 
 ;;-------------------------------------
 ;; Constants
