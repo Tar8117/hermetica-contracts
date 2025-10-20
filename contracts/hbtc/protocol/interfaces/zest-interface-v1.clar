@@ -1,13 +1,10 @@
-;; @contract Zest Interface
-;; @version 1
-
-(use-trait borrow-helper .zest-borrow-helper-trait-v1.zest-borrow-helper-trait)
+;; @contract Zest Interface v2
+;; @version 1.1
+;; @desc Interface for Zest v2 lending protocol integration
 
 (use-trait ft 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.ft-trait.ft-trait)
-(use-trait ft-mint 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.ft-mint-trait.ft-mint-trait)
-(use-trait oracle 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.oracle-trait.oracle-trait)
-(use-trait redeemable-token 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.redeemeable-trait-v1-2.redeemeable-trait)
-(use-trait incentives 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.incentives-trait-v2-1.incentives-trait)
+(use-trait zest-market .zest-market-trait-v1.zest-market-trait)
+(use-trait zest-vault .zest-vault-trait-v1.zest-vault-trait)
 
 (define-constant ERR_INVALID_AMOUNT (err u111001))
 (define-constant ERR_INSUFFICIENT_BALANCE (err u111002))
@@ -15,118 +12,227 @@
 (define-constant this-contract (as-contract tx-sender))
 (define-constant reserve .reserve-v1)
 
+
 ;;-------------------------------------
-;; Trader
+;; Trader - Collateral Management
 ;;-------------------------------------
 
-(define-public (zest-supply
-  (borrow-helper-trait <borrow-helper>)
-  (lp-trait <redeemable-token>)
-  (pool-reserve principal)
+;; @desc - Adds collateral to Zest v2 market
+;; @param - market-trait: Zest v2 market contract
+;; @param - asset-trait: Token to supply as collateral
+;; @param - amount: Amount of tokens to supply
+;; @param - price-feed-1: Optional Pyth price feed data for sBTC
+;; @param - price-feed-2: Optional Pyth price feed data (secondary)
+(define-public (zest-collateral-add
+  (market-trait <zest-market>)
   (asset-trait <ft>)
-  (amount uint) 
-  (referral (optional principal))
-  (incentives-trait <incentives>)) 
-  (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
-    (try! (contract-call? .state-v1 check-trading-auth (contract-of borrow-helper-trait) none (some (contract-of asset-trait)) none))
-    (try! (contract-call? .reserve-v1 transfer asset-trait amount this-contract))
-    (try! (as-contract (contract-call? borrow-helper-trait supply lp-trait pool-reserve asset-trait amount this-contract referral incentives-trait)))
-    (print { action: "zest-supply", user: contract-caller, data: { borrow-helper: borrow-helper-trait, asset: asset-trait, amount: amount, referral: referral } })
-    (ok true)
-  )
-)
-
-(define-public (zest-withdraw
-  (borrow-helper-trait <borrow-helper>)
-  (lp-trait <redeemable-token>)
-  (pool-reserve principal)
-  (asset-trait <ft>)
-  (oracle-trait <oracle>)
   (amount uint)
-  (assets (list 100 { asset: <ft>, lp-token: <ft-mint>, oracle: <oracle> }))
-  (incentives-trait <incentives>)
   (price-feed-1 (optional (buff 8192)))
   (price-feed-2 (optional (buff 8192))))
   (begin
     (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
-    (try! (contract-call? .state-v1 check-trading-auth (contract-of borrow-helper-trait) none (some (contract-of asset-trait)) none))
+    (try! (contract-call? .state-v1 check-trading-auth (contract-of market-trait) none (some (contract-of asset-trait)) none))
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    
+    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
     (try! (write-feed price-feed-1))
     (try! (write-feed price-feed-2))
-    (try! (as-contract (contract-call? borrow-helper-trait withdraw lp-trait pool-reserve asset-trait oracle-trait amount this-contract assets incentives-trait none)))
-    (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
-    (print { action: "zest-withdraw", user: contract-caller, data: { borrow-helper: borrow-helper-trait, asset: asset-trait, amount: amount } })
+    
+    ;; Transfer tokens from reserve to this interface
+    (try! (contract-call? .reserve-v1 transfer asset-trait amount this-contract))
+    
+    ;; Add collateral to Zest market (position owned by this interface contract)
+    (try! (as-contract (contract-call? market-trait collateral-add asset-trait amount this-contract)))
+    
+    (print { action: "zest-collateral-add", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
     (ok true)
   )
 )
 
-(define-public (zest-borrow
-  (borrow-helper-trait <borrow-helper>)
-  (pool-reserve principal)
-  (oracle-trait <oracle>)
-  (asset-to-borrow-trait <ft>)
-  (lp-trait <ft>)
-  (assets (list 100 { asset: <ft>, lp-token: <ft-mint>, oracle: <oracle> }))
-  (amount-to-be-borrowed uint)
-  (fee-calculator principal)
-  (interest-rate-mode uint)
-  (price-feed-1 (optional (buff 8192)))
-  (price-feed-2 (optional (buff 8192))))
-  (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
-    (try! (contract-call? .state-v1 check-trading-auth (contract-of borrow-helper-trait) none (some (contract-of asset-to-borrow-trait)) none))
-    (try! (write-feed price-feed-1))
-    (try! (write-feed price-feed-2))
-    (try! (as-contract (contract-call? borrow-helper-trait borrow pool-reserve oracle-trait asset-to-borrow-trait lp-trait assets amount-to-be-borrowed fee-calculator interest-rate-mode this-contract none)))
-    (try! (as-contract (contract-call? asset-to-borrow-trait transfer amount-to-be-borrowed this-contract reserve none)))
-    (print { action: "zest-borrow", user: contract-caller, data: { borrow-helper: borrow-helper-trait, asset-to-borrow: asset-to-borrow-trait, amount-to-be-borrowed: amount-to-be-borrowed, interest-rate-mode: interest-rate-mode } })
-    (ok true)
-  )
-)
-
-(define-public (zest-repay
-  (borrow-helper-trait <borrow-helper>)
-  (asset-trait <ft>) 
-  (amount-to-repay uint) 
-  (payer principal))
-  (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
-    (try! (contract-call? .state-v1 check-trading-auth (contract-of borrow-helper-trait) none (some (contract-of asset-trait)) none))
-    (try! (contract-call? .reserve-v1 transfer asset-trait amount-to-repay this-contract))
-    (try! (as-contract (contract-call? borrow-helper-trait repay asset-trait amount-to-repay this-contract payer)))
-    (print { action: "zest-repay", user: contract-caller, data: { borrow-helper: borrow-helper-trait, asset: asset-trait, amount-to-repay: amount-to-repay, payer: payer } })
-    (ok true)
-  )
-)
-
-;; claims STX incentives paid out by Zest
-(define-public (zest-claim-rewards
-  (borrow-helper-trait <borrow-helper>)
-  (lp-trait <redeemable-token>)
-  (pool-reserve principal)
+;; @desc - Removes collateral from Zest v2 market
+;; @param - market-trait: Zest v2 market contract
+;; @param - asset-trait: Token to remove from collateral
+;; @param - amount: Amount of tokens to remove
+;; @param - price-feed-1: Optional Pyth price feed data for sBTC
+;; @param - price-feed-2: Optional Pyth price feed data (secondary)
+(define-public (zest-collateral-remove
+  (market-trait <zest-market>)
   (asset-trait <ft>)
-  (oracle-trait <oracle>)
-  (assets (list 100 { asset: <ft>, lp-token: <ft-mint>, oracle: <oracle> }))
-  (reward-asset-trait <ft>)
-  (incentives-trait <incentives>)
+  (amount uint)
   (price-feed-1 (optional (buff 8192)))
   (price-feed-2 (optional (buff 8192))))
-  (let (
-    (balance-before (unwrap-panic (contract-call? reward-asset-trait get-balance this-contract)))
-  )
+  (begin
     (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
-    (try! (contract-call? .state-v1 check-trading-auth (contract-of borrow-helper-trait) none (some (contract-of asset-trait)) (some (contract-of reward-asset-trait))))
+    (try! (contract-call? .state-v1 check-trading-auth (contract-of market-trait) none (some (contract-of asset-trait)) none))
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    
+    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
     (try! (write-feed price-feed-1))
     (try! (write-feed price-feed-2))
-    (try! (as-contract (contract-call? borrow-helper-trait claim-rewards lp-trait pool-reserve asset-trait oracle-trait this-contract assets reward-asset-trait incentives-trait none)))
-    (let (
-      (balance-after (unwrap-panic (contract-call? reward-asset-trait get-balance this-contract)))
-      (reward-balance (- balance-after balance-before)))
-
-      (try! (as-contract (contract-call? reward-asset-trait transfer reward-balance this-contract reserve none)))
-      (print { action: "zest-claim-rewards", user: contract-caller, data: { borrow-helper: borrow-helper-trait, asset: asset-trait, reward-asset: reward-asset-trait, reward-balance: reward-balance } })
-    )
+    
+    ;; Remove collateral from Zest market
+    (try! (as-contract (contract-call? market-trait collateral-remove asset-trait amount this-contract)))
+    
+    ;; Transfer tokens back to reserve
+    (try! (as-contract (contract-call? asset-trait transfer amount this-contract .reserve-v1 none)))
+    
+    (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
     (ok true)
+  )
+)
+
+;;-------------------------------------
+;; Trader - Borrowing
+;;-------------------------------------
+
+;; @desc - Borrows assets from Zest v2 market
+;; @param - market-trait: Zest v2 market contract
+;; @param - asset-trait: Token to borrow
+;; @param - amount: Amount of tokens to borrow
+;; @param - price-feed-1: Optional Pyth price feed data for sBTC
+;; @param - price-feed-2: Optional Pyth price feed data (secondary)
+(define-public (zest-borrow
+  (market-trait <zest-market>)
+  (asset-trait <ft>)
+  (amount uint)
+  (price-feed-1 (optional (buff 8192)))
+  (price-feed-2 (optional (buff 8192))))
+  (begin
+    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .state-v1 check-trading-auth (contract-of market-trait) none (some (contract-of asset-trait)) none))
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    
+    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
+    (try! (write-feed price-feed-1))
+    (try! (write-feed price-feed-2))
+    
+    ;; Borrow from Zest market (debt recorded under this interface contract)
+    (try! (as-contract (contract-call? market-trait borrow asset-trait amount this-contract)))
+    
+    ;; Transfer borrowed tokens to reserve
+    (try! (as-contract (contract-call? asset-trait transfer amount this-contract .reserve-v1 none)))
+    
+    (print { action: "zest-borrow", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
+    (ok true)
+  )
+)
+
+;; @desc - Repays borrowed assets to Zest v2 market
+;; @param - market-trait: Zest v2 market contract
+;; @param - asset-trait: Token to repay
+;; @param - amount: Amount of tokens to repay
+;; @param - price-feed-1: Optional Pyth price feed data for sBTC
+;; @param - price-feed-2: Optional Pyth price feed data (secondary)
+(define-public (zest-repay
+  (market-trait <zest-market>)
+  (asset-trait <ft>)
+  (amount uint)
+  (price-feed-1 (optional (buff 8192)))
+  (price-feed-2 (optional (buff 8192))))
+  (begin
+    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .state-v1 check-trading-auth (contract-of market-trait) none (some (contract-of asset-trait)) none))
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    
+    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
+    (try! (write-feed price-feed-1))
+    (try! (write-feed price-feed-2))
+    
+    ;; Transfer repayment from reserve to this interface
+    (try! (contract-call? .reserve-v1 transfer asset-trait amount this-contract))
+    
+    ;; Repay to Zest market
+    (try! (as-contract (contract-call? market-trait repay asset-trait amount this-contract)))
+    
+    (print { action: "zest-repay", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
+    (ok true)
+  )
+)
+
+;;-------------------------------------
+;; Liquidity Provider - Vault Management
+;;-------------------------------------
+
+;; @desc - Deposits assets to Zest v2 vault as liquidity provider
+;; @param - vault-trait: Zest v2 vault contract
+;; @param - z-token-trait: Z-token (vault shares) to receive
+;; @param - asset-trait: Token to deposit to vault
+;; @param - amount: Amount of tokens to deposit
+;; @param - min-shares: Minimum vault shares to receive (slippage protection)
+;; @param - price-feed-1: Optional Pyth price feed data for sBTC
+;; @param - price-feed-2: Optional Pyth price feed data (secondary)
+(define-public (zest-deposit
+  (vault-trait <zest-vault>)
+  (z-token-trait <ft>)
+  (asset-trait <ft>)
+  (amount uint)
+  (min-shares uint)
+  (price-feed-1 (optional (buff 8192)))
+  (price-feed-2 (optional (buff 8192))))
+  (begin
+    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .state-v1 check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    
+    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
+    (try! (write-feed price-feed-1))
+    (try! (write-feed price-feed-2))
+    
+    ;; Transfer tokens from reserve to this interface
+    (try! (contract-call? .reserve-v1 transfer asset-trait amount this-contract))
+    
+    ;; Deposit to Zest vault (z-tokens minted to this interface contract)
+    (let (
+      (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares this-contract))))
+    )
+      ;; Transfer z-tokens (vault shares) to reserve
+      (try! (as-contract (contract-call? z-token-trait transfer received this-contract .reserve-v1 none)))
+      
+      (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, shares: received } })
+      (ok received)
+    )
+  )
+)
+
+;; @desc - Redeems vault shares from Zest v2 vault
+;; @param - vault-trait: Zest v2 vault contract
+;; @param - z-token-trait: Z-token (vault shares) to redeem
+;; @param - asset-trait: Token to receive from vault
+;; @param - shares: Amount of vault shares to redeem
+;; @param - min-amount: Minimum underlying tokens to receive (slippage protection)
+;; @param - price-feed-1: Optional Pyth price feed data for sBTC
+;; @param - price-feed-2: Optional Pyth price feed data (secondary)
+(define-public (zest-redeem
+  (vault-trait <zest-vault>)
+  (z-token-trait <ft>)
+  (asset-trait <ft>)
+  (shares uint)
+  (min-amount uint)
+  (price-feed-1 (optional (buff 8192)))
+  (price-feed-2 (optional (buff 8192))))
+  (begin
+    (try! (contract-call? .hq-hbtc-v1 check-is-trader contract-caller))
+    (try! (contract-call? .state-v1 check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
+    (asserts! (> shares u0) ERR_INVALID_AMOUNT)
+    
+    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
+    (try! (write-feed price-feed-1))
+    (try! (write-feed price-feed-2))
+    
+    ;; Transfer z-tokens from reserve to this interface
+    (try! (contract-call? .reserve-v1 transfer z-token-trait shares this-contract))
+
+    ;; Get actual amount received
+    (let (
+      ;; Redeem from Zest vault (burns z-tokens, receives underlying tokens)
+      (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount this-contract))))
+    )
+      ;; Transfer received tokens back to reserve
+      (try! (as-contract (contract-call? asset-trait transfer received this-contract .reserve-v1 none)))
+      
+      (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, amount: received } })
+      (ok received)
+    )
   )
 )
 
