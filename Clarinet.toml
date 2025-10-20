@@ -8,6 +8,9 @@ cache_dir = '.cache'
 [[project.requirements]]
 contract_id = 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3'
 
+[[project.requirements]]
+contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4'
+
 # protocol
 
 [contracts.minting-state]
