@@ -1,5 +1,5 @@
-;; @contract Zest Interface v2
-;; @version 1.1
+;; @contract Zest Interface 
+;; @version 1
 ;; @desc Interface for Zest v2 lending protocol integration
 
 (use-trait ft 'SP2VCQJGH7PHP2DJK7Z0V48AGBHQAW3R3ZW1QF4N.ft-trait.ft-trait)
