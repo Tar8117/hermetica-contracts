@@ -8,111 +8,197 @@ cache_dir = '.cache'
 [[project.requirements]]
 contract_id = 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3'
 
-# protocol
+[[project.requirements]]
+contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4'
+
+# usdh protocol
 
 [contracts.minting-state]
-path = 'contracts/protocol/minting-state-v1.clar'
+path = 'contracts/usdh/protocol/minting-state-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.controller]
-path = 'contracts/protocol/controller-v1.clar'
+path = 'contracts/usdh/protocol/controller-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.hq]
-path = 'contracts/protocol/hq-v1.clar'
+path = 'contracts/usdh/protocol/hq-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.minting-otc]
-path = 'contracts/protocol/minting-otc-v1.clar'
+path = 'contracts/usdh/protocol/minting-otc-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.minting]
-path = 'contracts/protocol/minting-v1.clar'
+path = 'contracts/usdh/protocol/minting-v1.clar'
 clarity_version = 3
 epoch = 3.0
 
 [contracts.minting-auto]
-path = 'contracts/protocol/minting-auto-v1-1.clar'
+path = 'contracts/usdh/protocol/minting-auto-v1-1.clar'
 clarity_version = 3
 epoch = 3.0
 
 [contracts.minting-auto-state]
-path = 'contracts/protocol/minting-auto-state-v1.clar'
+path = 'contracts/usdh/protocol/minting-auto-state-v1.clar'
 clarity_version = 3
 epoch = 3.0
 
 [contracts.redeeming-reserve]
-path = 'contracts/protocol/redeeming-reserve-v1-2.clar'
+path = 'contracts/usdh/protocol/redeeming-reserve-v1-2.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.staking]
-path = 'contracts/protocol/staking-v1-1.clar'
+path = 'contracts/usdh/protocol/staking-v1-1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.staking-silo]
-path = 'contracts/protocol/staking-silo-v1-1.clar'
+path = 'contracts/usdh/protocol/staking-silo-v1-1.clar'
 clarity_version = 3
 epoch = 3.1
 
 [contracts.staking-reserve]
-path = 'contracts/protocol/staking-reserve-v1.clar'
+path = 'contracts/usdh/protocol/staking-reserve-v1.clar'
 clarity_version = 3
 epoch = 3.1
 
 [contracts.staking-state]
-path = 'contracts/protocol/staking-state-v1.clar'
+path = 'contracts/usdh/protocol/staking-state-v1.clar'
 clarity_version = 3
 epoch = 3.1
 
 [contracts.blacklist-susdh]
-path = 'contracts/protocol/blacklist-susdh-v1.clar'
+path = 'contracts/usdh/protocol/blacklist-susdh-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.emergency-recover]
-path = 'contracts/protocol/emergency-recover-v1.clar'
+path = 'contracts/usdh/protocol/emergency-recover-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 # tokens
 
 [contracts.susdh-token]
-path = 'contracts/tokens/susdh-token-v1.clar'
+path = 'contracts/usdh/tokens/susdh-token-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.usdh-token]
-path = 'contracts/tokens/usdh-token-v1.clar'
+path = 'contracts/usdh/tokens/usdh-token-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 # traits
 
 [contracts.sip-010-trait]
-path = 'contracts/traits/sip-010-trait.clar'
+path = 'contracts/usdh/traits/sip-010-trait.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.token-migration-trait]
-path = 'contracts/traits/token-migration-trait-v1.clar'
+path = 'contracts/usdh/traits/token-migration-trait-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.interim-token-trait]
-path = 'contracts/traits/interim-token-trait-v1.clar'
+path = 'contracts/usdh/traits/interim-token-trait-v1.clar'
 clarity_version = 2
 epoch = 2.5
 
 [contracts.staking-trait]
-path = 'contracts/traits/staking-trait-v1.clar'
+path = 'contracts/usdh/traits/staking-trait-v1.clar'
 clarity_version = 3
 epoch = 3.1
+
+# hbtc protocol
+
+[contracts.hbtc-blacklist]
+path = 'contracts/hbtc/protocol/blacklist-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-controller]
+path = 'contracts/hbtc/protocol/controller-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-fee-collector]
+path = 'contracts/hbtc/protocol/fee-collector-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-hq]
+path = 'contracts/hbtc/protocol/hq-hbtc-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-reserve-fund]
+path = 'contracts/hbtc/protocol/reserve-fund-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-reserve]
+path = 'contracts/hbtc/protocol/reserve-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-state]
+path = 'contracts/hbtc/protocol/state-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-trading]
+path = 'contracts/hbtc/protocol/trading-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.hbtc-vault]
+path = 'contracts/hbtc/protocol/vault-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+# hbtc interfaces
+
+[contracts.hermetica-interface]
+path = 'contracts/hbtc/protocol/interfaces/hermetica-interface-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-interface]
+path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+# hbtc tokens
+
+[contracts.hbtc-token]
+path = 'contracts/hbtc/tokens/hbtc-token.clar'
+clarity_version = 3
+epoch = 3.2
+
+# hbtc traits
+
+[contracts.vault-trait]
+path = 'contracts/hbtc/traits/vault-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-market-trait]
+path = 'contracts/hbtc/traits/zest-market-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.zest-vault-trait]
+path = 'contracts/hbtc/traits/zest-vault-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
 
 # pyth
 
