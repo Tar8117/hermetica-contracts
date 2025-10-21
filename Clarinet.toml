@@ -39,7 +39,7 @@ clarity_version = 3
 epoch = 3.0
 
 [contracts.minting-auto]
-path = 'contracts/usdh/protocol/minting-auto-v1-1.clar'
+path = 'contracts/usdh/protocol/minting-auto-v1-2.clar'
 clarity_version = 3
 epoch = 3.0
 
