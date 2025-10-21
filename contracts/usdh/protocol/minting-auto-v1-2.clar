@@ -1,10 +1,12 @@
 ;; @contract Minting Auto
-;; @version 1.1
+;; @version 1.2
+
+(impl-trait .minting-auto-trait.minting-auto-trait)
 
 (use-trait sip-010-trait .sip-010-trait.sip-010-trait)
-(use-trait pyth-storage-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-traits-v1.storage-trait)
-(use-trait pyth-decoder-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-traits-v1.decoder-trait)
-(use-trait wormhole-core-trait 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.wormhole-traits-v1.core-trait)
+(use-trait pyth-storage-trait 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-traits-v2.storage-trait)
+(use-trait pyth-decoder-trait 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-traits-v2.decoder-trait)
+(use-trait wormhole-core-trait 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.wormhole-traits-v2.core-trait)
 
 ;;-------------------------------------
 ;; Constants
@@ -25,19 +27,17 @@
 (define-constant bps-base (pow u10 u4))
 (define-constant usdh-base (pow u10 u8))
 
-(define-constant max-price-slippage u1000)
-(define-constant max-block-delay u10)
-(define-constant max-mint-limit (* u500000 usdh-base))
+(define-constant max-mint-limit (* u1000000 usdh-base))
 (define-constant min-mint-limit-reset-window u60)
 
 ;;-------------------------------------
 ;; Variables
 ;;-------------------------------------
 
-(define-data-var mint-limit uint (* u100000 usdh-base))
-(define-data-var current-mint-limit uint (* u100000 usdh-base))
+(define-data-var mint-limit uint (* u500000 usdh-base))
+(define-data-var current-mint-limit uint (* u500000 usdh-base))
 (define-data-var mint-limit-reset-window uint u600)
-(define-data-var last-mint-limit-reset uint u0)
+(define-data-var last-mint-limit-reset uint u1757221858)
 
 ;;-------------------------------------
 ;; Getters
@@ -90,7 +90,7 @@
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (get block-delay state)))))
     (decoded-data
       (match price-feed-bytes value
-        (element-at (try! (contract-call? 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3 decode-price-feeds value execution-plan)) u0)
+        (element-at (try! (contract-call? 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4 decode-price-feeds value execution-plan)) u0)
         (some { conf: u0, ema-conf: u0, ema-price: 0, expo: -8, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )
@@ -162,7 +162,7 @@
     (block-timestamp (unwrap-panic (get-stacks-block-info? time (- stacks-block-height (get block-delay state)))))
     (decoded-data
       (match price-feed-bytes value
-        (element-at (try! (contract-call? 'SP3R4F6C1J3JQWWCVZ3S7FRRYPMYG6ZW6RZK31FXY.pyth-oracle-v3 decode-price-feeds value execution-plan)) u0)
+        (element-at (try! (contract-call? 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4 decode-price-feeds value execution-plan)) u0)
         (some { conf: u0, ema-conf: u0, ema-price: 0, expo: -8, prev-publish-time: u0, price: (to-int (pow u10 u8)), price-identifier: 0x00, publish-time: (+ block-timestamp u1)})
       )
     )

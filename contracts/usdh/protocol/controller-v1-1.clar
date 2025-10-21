@@ -1,5 +1,5 @@
 ;; @contract Controller
-;; @version 1
+;; @version 1.1
 
 ;;-------------------------------------
 ;; Constants
@@ -8,7 +8,7 @@
 (define-constant ERR_NOT_REWARDER (err u5001))
 (define-constant ERR_UPDATE_WINDOW_CLOSED (err u5002))
 (define-constant ERR_ABOVE_MAX (err u5003))
-(define-constant ERR_BELOW_MIN (err u5005))
+(define-constant ERR_BELOW_MIN (err u5004))
 
 (define-constant max-reward u20)
 (define-constant min-update-window (* u6 u6))
@@ -20,9 +20,9 @@
 ;;-------------------------------------
 
 (define-data-var max-reward-per-window uint u10)
-(define-data-var update-window uint (* u6 u22))
+(define-data-var update-window uint (* u6 u14))
 
-(define-data-var last-log-block-height uint burn-block-height)
+(define-data-var last-log-block-height uint u914850)
 
 ;;-------------------------------------
 ;; Maps
@@ -77,7 +77,7 @@
 (define-public (log-reward (reward-usdh uint))
   (let (
     (total-usdh-supply (unwrap-panic (contract-call? .usdh-token get-total-supply)))
-    (total-usdh-supply-staked (unwrap-panic (contract-call? .usdh-token get-balance .staking)))
+    (total-usdh-supply-staked (unwrap-panic (contract-call? .usdh-token get-balance .staking-reserve)))
   )
     (try! (contract-call? .hq check-is-enabled))
     (try! (check-is-rewarder tx-sender))
@@ -91,7 +91,7 @@
           total-usdh-supply-staked: total-usdh-supply-staked,
           reward-usdh: reward-usdh
         })
-        (try! (contract-call? .usdh-token mint-for-protocol reward-usdh .staking))
+        (try! (contract-call? .usdh-token mint-for-protocol reward-usdh .staking-reserve))
       )
       true
     )

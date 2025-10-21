@@ -12,6 +12,9 @@
 
 (define-trait minting-auto-trait
   (
+    ;;-------------------------------------
+    ;; User Functions
+    ;;-------------------------------------
 
     ;; @desc - Mint USDh using supported assets
     (mint 
