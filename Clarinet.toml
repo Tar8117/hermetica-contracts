@@ -117,6 +117,16 @@ path = 'contracts/usdh/traits/staking-trait-v1.clar'
 clarity_version = 3
 epoch = 3.1
 
+[contracts.staking-silo-trait]
+path = 'contracts/usdh/traits/staking-silo-trait-v1.clar'
+clarity_version = 3
+epoch = 3.1
+
+[contracts.minting-auto-trait]
+path = 'contracts/usdh/traits/minting-auto-trait-v1.clar'
+clarity_version = 3
+epoch = 3.1
+
 # hbtc protocol
 
 [contracts.hbtc-blacklist]
