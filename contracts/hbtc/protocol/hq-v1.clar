@@ -336,4 +336,3 @@
     (ok (map-set protocol { address: address } updated-entry))
   )
 )
-

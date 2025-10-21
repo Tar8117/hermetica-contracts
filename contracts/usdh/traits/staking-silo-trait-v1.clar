@@ -7,6 +7,7 @@
 
 (define-trait staking-silo-trait
   (
+<<<<<<< HEAD
     ;;-------------------------------------
     ;; Getters
     ;;-------------------------------------
@@ -23,6 +24,13 @@
     ;; @desc - Transfer USDh to recipient after cooldown window has passed
     ;; @param - claim-id: ID of the claim to execute
     ;; @return - (ok bool) on success, (err uint) on failure
+=======
+
+    ;; @desc - Get claim data by ID
+    (get-claim (uint) (response {recipient: principal, amount: uint, ts: uint} uint))
+
+    ;; @desc - Transfer USDh to recipient after cooldown window has passed
+>>>>>>> master
     (withdraw (uint) (response bool uint))
 
   )
