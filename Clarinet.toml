@@ -37,7 +37,7 @@ clarity_version = 2
 epoch = 2.5
 
 [contracts.controller]
-path = 'contracts/usdh/protocol/controller-v1.clar'
+path = 'contracts/usdh/protocol/controller-v1-1.clar'
 clarity_version = 2
 epoch = 2.5
 
@@ -54,42 +54,42 @@ epoch = 2.5
 [contracts.minting]
 path = 'contracts/usdh/protocol/minting-v1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.minting-auto]
 path = 'contracts/usdh/protocol/minting-auto-v1-2.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.minting-auto-state]
 path = 'contracts/usdh/protocol/minting-auto-state-v1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.redeeming-reserve]
 path = 'contracts/usdh/protocol/redeeming-reserve-v1-2.clar'
 clarity_version = 2
-epoch = 3.1
+epoch = 3.2
 
 [contracts.staking]
 path = 'contracts/usdh/protocol/staking-v1-1.clar'
 clarity_version = 2
-epoch = 3.1
+epoch = 3.2
 
 [contracts.staking-silo]
 path = 'contracts/usdh/protocol/staking-silo-v1-1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.staking-reserve]
 path = 'contracts/usdh/protocol/staking-reserve-v1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.staking-state]
 path = 'contracts/usdh/protocol/staking-state-v1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.blacklist-susdh]
 path = 'contracts/usdh/protocol/blacklist-susdh-v1.clar'
@@ -133,17 +133,17 @@ epoch = 2.5
 [contracts.staking-trait]
 path = 'contracts/usdh/traits/staking-trait-v1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.staking-silo-trait]
 path = 'contracts/usdh/traits/staking-silo-trait-v1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 [contracts.minting-auto-trait]
 path = 'contracts/usdh/traits/minting-auto-trait-v1.clar'
 clarity_version = 3
-epoch = 3.1
+epoch = 3.2
 
 # hbtc protocol
 
