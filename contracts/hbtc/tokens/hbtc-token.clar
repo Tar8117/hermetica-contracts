@@ -63,14 +63,14 @@
 
 (define-public (set-token-uri (value (string-utf8 256)))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner tx-sender))
+    (try! (contract-call? .hq-hbtc check-is-owner tx-sender))
     (ok (var-set token-uri value))
   )
 )
 
 (define-public (set-token-name (name (string-ascii 32)))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner tx-sender))
+    (try! (contract-call? .hq-hbtc check-is-owner tx-sender))
     (ok (var-set token-name name))
   )
 )
@@ -82,7 +82,7 @@
 ;; Mint method
 (define-public (mint-for-protocol (amount uint) (recipient principal))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-protocol contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-protocol contract-caller))
     (ft-mint? hBTC amount recipient)
   )
 )
@@ -90,7 +90,7 @@
 ;; Burn method
 (define-public (burn-for-protocol (amount uint) (sender principal))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-protocol contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-protocol contract-caller))
     (ft-burn? hBTC amount sender)
   )
 )

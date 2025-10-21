@@ -151,7 +151,7 @@
 
 (define-public (set-blacklister (address principal) (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (print { action: "set-blacklister", user: contract-caller, data: { address: address, active: active } })
     (ok (map-set blacklister { address: address } { active: active }))
   )
@@ -159,7 +159,7 @@
 
 (define-public (set-soft-blacklist-active (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (print { action: "set-soft-blacklist-active", user: contract-caller, data: { old-value: (get-soft-blacklist-active), new-value: active } })
     (ok (var-set soft-blacklist-active active))
   )
@@ -167,9 +167,8 @@
 
 (define-public (set-full-blacklist-active (active bool))
   (begin
-    (try! (contract-call? .hq-hbtc-v1 check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (print { action: "set-full-blacklist-active", user: contract-caller, data: { old-value: (get-full-blacklist-active), new-value: active } })
     (ok (var-set full-blacklist-active active))
   )
 )
-
