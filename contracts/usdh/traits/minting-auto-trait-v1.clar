@@ -12,18 +12,8 @@
 
 (define-trait minting-auto-trait
   (
-    ;;-------------------------------------
-    ;; User Functions
-    ;;-------------------------------------
 
     ;; @desc - Mint USDh using supported assets
-    ;; @param - minting-asset: SIP-010 trait of the minting asset
-    ;; @param - amount-usdh-requested: amount of USDh to mint (10**8)
-    ;; @param - price-slippage-tolerance: slippage tolerance in basis points
-    ;; @param - memo: optional memo for the transfer call
-    ;; @param - price-feed-bytes: optional Pyth price feed data
-    ;; @param - execution-plan: Pyth contracts configuration
-    ;; @return - (ok bool) on success, (err uint) on failure
     (mint 
       (
         <ft> 
@@ -41,13 +31,6 @@
     )
 
     ;; @desc - Redeem USDh for supported assets
-    ;; @param - redeeming-asset: SIP-010 trait of the redeeming asset
-    ;; @param - amount-usdh-requested: amount of USDh to redeem (10**8)
-    ;; @param - price-slippage-tolerance: slippage tolerance in basis points
-    ;; @param - memo: optional memo for the transfer call
-    ;; @param - price-feed-bytes: optional Pyth price feed data
-    ;; @param - execution-plan: Pyth contracts configuration
-    ;; @return - (ok bool) on success, (err uint) on failure
     (redeem 
       (
         <ft> 

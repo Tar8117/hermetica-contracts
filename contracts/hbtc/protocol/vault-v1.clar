@@ -46,15 +46,11 @@
 ;;-------------------------------------
 
 ;; @desc - calculate how many shares (hBTC tokens) you'd get for a given asset amount
-;; @param - assets: amount of underlying asset (sBTC) to convert
-;; @return - number of shares (hBTC tokens) that would be minted
 (define-read-only (convert-to-shares (assets uint))
   (/ (* assets share-base) (contract-call? .state get-share-price))
 )
 
 ;; @desc - calculate how many assets (sBTC) a given number of shares is worth
-;; @param - shares: number of shares (hBTC tokens) to convert
-;; @return - amount of underlying asset (sBTC) that would be received
 (define-read-only (convert-to-assets (shares uint))
   (/ (* shares (contract-call? .state get-share-price)) share-base)
 )
@@ -72,8 +68,6 @@
 ;;-------------------------------------
 
 ;; @desc - deposit asset to mint shares
-;; @param - asset: amount of asset to deposit (10**8)
-;; @param - affiliate: affiliate of the deposit transaction (optional)
 (define-public (deposit (assets uint) (affiliate (optional (buff 64))))
   (let (
     (state (contract-call? .state get-deposit-state))
@@ -97,8 +91,6 @@
 )
 
 ;; @desc - shared claim creation logic for both withdraw and redeem operations
-;; @param - assets: total asset amount (including fees)
-;; @param - shares: number of hBTC tokens to burn
 (define-private (create-claim (assets uint) (shares uint) (exit-fee uint) (cooldown uint))
   (let (
     (new-claim-id (try! (contract-call? .state increment-claim-id)))
@@ -126,8 +118,6 @@
 )
 
 ;; @desc - creates a claim to withdraw asset after cooldown period has passed
-;; @param - assets: gross amount of sBTC tokens to withdraw including fees (10**8)
-;; @param - is-express: whether the claim is express
 (define-public (init-withdraw (assets uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
@@ -145,8 +135,6 @@
 )
 
 ;; @desc - creates a claim to redeem shares for assets after cooldown period has passed
-;; @param - shares: number of HBTC tokens (shares) to redeem (10**8)
-;; @param - is-express: whether the claim is express
 (define-public (init-redeem (shares uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
@@ -164,7 +152,6 @@
 )
 
 ;; @desc - executes a claim for each claim-id in the list
-;; @param - entries: list of claim-ids
 (define-public (withdraw-many (entries (list 1000 uint)))
   (fold withdraw-iter entries (ok u0))
 )
@@ -181,7 +168,6 @@
 )
 
 ;; @desc - transfers asset to user after cooldown window has passed
-;; @param - claim-id: uint id of the claim
 (define-public (withdraw (claim-id uint))
   (let (
     (current-claim (try! (get-claim claim-id)))
@@ -220,7 +206,6 @@
 )
 
 ;; @desc - called by the protocol to fund a claim 
-;; @param - claim-id: claim id to fund
 (define-public (fund-claim (claim-id uint))
   (let (
     (claim (try! (get-claim claim-id)))
