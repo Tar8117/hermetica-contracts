@@ -135,7 +135,7 @@ clarity_version = 3
 epoch = 3.2
 
 [contracts.hbtc-controller]
-path = 'contracts/hbtc/protocol/controller-v1.clar'
+path = 'contracts/hbtc/protocol/controller-v1-1.clar'
 clarity_version = 3
 epoch = 3.2
 
