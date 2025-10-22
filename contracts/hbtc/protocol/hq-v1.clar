@@ -248,12 +248,14 @@
 (define-public (claim-owner)
   (let (
     (entry (get-next-owner))
-    (next-address (get address entry))
+    (next (get address entry))
+    (current (get-owner))
   )
-    (asserts! (is-eq next-address contract-caller) ERR_NOT_OWNER)
+    (asserts! (is-eq next contract-caller) ERR_NOT_OWNER)
     (try! (check-activation-delay (get ts entry)))
-    (print { action: "claim-owner", user: contract-caller, data: { old: (get-owner), new: next-address } })
-    (ok (var-set owner next-address))
+    (asserts! (not (is-eq current next)) ERR_DUPLICATE)
+    (print { action: "claim-owner", user: contract-caller, data: { old: current, new: next } })
+    (ok (var-set owner next))
   )
 )
 
