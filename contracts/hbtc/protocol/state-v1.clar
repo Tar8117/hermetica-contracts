@@ -443,9 +443,11 @@
 )
 
 (define-private (update-last-log-ts)
-  (begin
-    (print { action: "update-last-log-ts", data: { old: (get-last-log-ts), new: (get-current-ts) } })
-    (var-set last-log-ts (get-current-ts))
+  (let (
+    (current (get-current-ts))
+  )
+    (print { action: "update-last-log-ts", data: { old: (get-last-log-ts), new: current } })
+    (var-set last-log-ts current)
   )
 )
 
