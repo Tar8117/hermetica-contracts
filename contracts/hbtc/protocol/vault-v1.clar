@@ -121,7 +121,8 @@
 (define-public (init-withdraw (assets uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (shares (/ (* assets share-base) (get share-price state)))
+    (share-price (get share-price state))
+    (shares (/ (+ (* assets share-base) (- share-price u1)) share-price))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
