@@ -47,11 +47,7 @@
 
 ;; @desc - calculate how many shares (hBTC tokens) you'd get for a given asset amount
 (define-read-only (convert-to-shares (assets uint))
-  (let (
-    (share-price (contract-call? .state get-share-price))
-  )
-    (/ (+ (* assets share-base) (- share-price u1)) share-price)
-  )
+  (/ (* assets share-base) (contract-call? .state get-share-price))
 )
 
 ;; @desc - calculate how many assets (sBTC) a given number of shares is worth
