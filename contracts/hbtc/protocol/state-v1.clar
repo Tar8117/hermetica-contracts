@@ -597,6 +597,17 @@
   )
 )
 
+(define-private (remove-custom-cooldown-iter (address principal) (prev (response bool uint)))
+  (ok (and (try! prev) (map-delete custom-cooldown { address: address }))))
+
+(define-public (remove-custom-cooldown (addresses (list 200 principal)))
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
+    (print { action: "remove-custom-cooldown", user: contract-caller, data: { addresses: addresses } })
+    (fold remove-custom-cooldown-iter addresses (ok true))
+  )
+)
+
 (define-public (set-deposit-cap (new-deposit-cap uint))  
   (begin
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
