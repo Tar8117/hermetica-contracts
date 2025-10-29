@@ -559,6 +559,17 @@
   )
 )
 
+(define-private (remove-custom-exit-fee-iter (address principal) (prev (response bool uint)))
+  (ok (and (try! prev) (map-delete custom-exit-fee { address: address }))))
+
+(define-public (remove-custom-exit-fee (addresses (list 200 principal)))
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-fee-setter contract-caller))
+    (print { action: "remove-custom-exit-fee", user: contract-caller, data: { addresses: addresses } })
+    (fold remove-custom-exit-fee-iter addresses (ok true))
+  )
+)
+
 (define-public (set-cooldown (new-cooldown uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
