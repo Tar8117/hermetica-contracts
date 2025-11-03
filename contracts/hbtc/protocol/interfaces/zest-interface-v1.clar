@@ -21,17 +21,11 @@
 (define-public (zest-collateral-add
   (market-trait <zest-market>)
   (asset-trait <ft>)
-  (amount uint)
-  (price-feed-1 (optional (buff 8192)))
-  (price-feed-2 (optional (buff 8192))))
+  (amount uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of market-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    
-    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
-    (try! (write-feed price-feed-1))
-    (try! (write-feed price-feed-2))
     
     ;; Transfer tokens from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
@@ -139,17 +133,11 @@
   (z-token-trait <ft>)
   (asset-trait <ft>)
   (amount uint)
-  (min-shares uint)
-  (price-feed-1 (optional (buff 8192)))
-  (price-feed-2 (optional (buff 8192))))
+  (min-shares uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    
-    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
-    (try! (write-feed price-feed-1))
-    (try! (write-feed price-feed-2))
     
     ;; Transfer tokens from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
@@ -173,17 +161,11 @@
   (z-token-trait <ft>)
   (asset-trait <ft>)
   (shares uint)
-  (min-amount uint)
-  (price-feed-1 (optional (buff 8192)))
-  (price-feed-2 (optional (buff 8192))))
+  (min-amount uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
-    
-    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
-    (try! (write-feed price-feed-1))
-    (try! (write-feed price-feed-2))
     
     ;; Transfer z-tokens from reserve to this interface
     (try! (contract-call? .reserve transfer z-token-trait shares this-contract))
