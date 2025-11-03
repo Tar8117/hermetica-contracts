@@ -132,12 +132,20 @@
   (let (
     (transfer-amount (if (> req-rf pending-rf) (- req-rf pending-rf) u0))
     (rf-decrease (if (> transfer-amount u0) pending-rf req-rf))
+    (reward-delta (if is-positive
+      { reward: (+ reward transfer-amount), is-add: true }
+      (if (>= reward transfer-amount)
+        { reward: (- reward transfer-amount), is-add: false }
+        { reward: (- transfer-amount reward), is-add: true })))
   )
     (print {
       action: "log-reward",
       case: "loss-covered",
       user: contract-caller,
-      data: { reward: { gross: reward, net: u0, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: (- total-rf req-rf) } }
+      data: { 
+        reward: { gross: reward, net: (get reward reward-delta), rf: transfer-amount, is-positive: is-positive, net-is-add: (get is-add reward-delta) }, 
+        fees: { perf: u0, mgmt: mgmt-fee }, 
+        rf: { old: total-rf, new: (- total-rf req-rf) } }
     })
     
     ;; Physical transfer if needed
@@ -151,7 +159,7 @@
       (list
         { type: "pending-rf", amount: rf-decrease, is-add: false }
         { type: "pending-fees", amount: mgmt-fee, is-add: true })
-      (some { reward: u0, is-add: false })
+      (some { reward: (get reward reward-delta), is-add: (get is-add reward-delta) })
       none))
     (ok true) 
   )
