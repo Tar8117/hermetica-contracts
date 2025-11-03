@@ -64,7 +64,7 @@
     (try! (as-contract (contract-call? market-trait collateral-remove asset-trait amount this-contract)))
     
     ;; Transfer tokens back to reserve
-    (try! (as-contract (contract-call? asset-trait transfer amount this-contract .reserve none)))
+    (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
     
     (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
     (ok true)
@@ -95,7 +95,7 @@
     (try! (as-contract (contract-call? market-trait borrow asset-trait amount this-contract)))
     
     ;; Transfer borrowed tokens to reserve
-    (try! (as-contract (contract-call? asset-trait transfer amount this-contract .reserve none)))
+    (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
     
     (print { action: "zest-borrow", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
     (ok true)
@@ -159,7 +159,7 @@
       (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares this-contract))))
     )
       ;; Transfer z-tokens (vault shares) to reserve
-      (try! (as-contract (contract-call? z-token-trait transfer received this-contract .reserve none)))
+      (try! (as-contract (contract-call? z-token-trait transfer received this-contract reserve none)))
       
       (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, shares: received } })
       (ok received)
@@ -194,7 +194,7 @@
       (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount this-contract))))
     )
       ;; Transfer received tokens back to reserve
-      (try! (as-contract (contract-call? asset-trait transfer received this-contract .reserve none)))
+      (try! (as-contract (contract-call? asset-trait transfer received this-contract reserve none)))
       
       (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, amount: received } })
       (ok received)
