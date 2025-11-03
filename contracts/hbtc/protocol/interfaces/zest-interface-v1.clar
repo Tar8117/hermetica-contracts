@@ -216,6 +216,7 @@
           wormhole-core-contract: 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.wormhole-core-v4,
         }
       ))
+      (print { action: "write-feed", user: contract-caller, data: { requested-by: this-contract, oracle: 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4 } })
       (ok true)
     )
     ;; do nothing if none
