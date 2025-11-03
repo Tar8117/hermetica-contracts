@@ -118,7 +118,7 @@
       (list
         { type: "pending-fees", amount: (+ perf-fee mgmt-fee), is-add: true }
         { type: "pending-rf", amount: reward-rf, is-add: true })
-      (some { reward: reward-net, is-add: true })
+      (some { reward: reward, is-add: true })
       none)))
   )
 )
