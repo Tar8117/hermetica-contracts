@@ -291,7 +291,7 @@
 
 ;; @desc - Batch getter for controller reward operations
 (define-read-only (get-reward-state)
-  { total-assets: (get-total-assets), fees: (get-fees), pending-rf: (get-pending-rf), reserve-rate: (get-reserve-rate) }
+  { total-assets: (get-total-assets), net-assets: (get-net-assets), fees: (get-fees), pending-rf: (get-pending-rf), reserve-rate: (get-reserve-rate) }
 )
 
 ;; @desc - Batch getter for deposit operation - returns all state needed for deposit validation
