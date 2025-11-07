@@ -64,7 +64,7 @@
 ;;-------------------------------------
 
 ;; @desc - Opens a leveraged position using direct sBTC collateral
-(define-public (zest-open-add
+(define-public (zest-add-open
   (market-trait <zest-market>) (staking-trait <staking>) (sbtc-token-trait <ft>) (usdh-token-trait <ft>)
   (sbtc-amount uint) (usdh-amount uint)
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
@@ -79,7 +79,7 @@
     ;; Step 2: Borrow USDh and stake it in Hermetica
     (try! (zest-open market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
 
-    (print { action: "zest-open-add", user: contract-caller, data: { sbtc-amount: sbtc-amount, usdh-amount: usdh-amount } })
+    (print { action: "zest-add-open", user: contract-caller, data: { sbtc-amount: sbtc-amount, usdh-amount: usdh-amount } })
     (ok true)
   )
 )
@@ -128,7 +128,7 @@
 ;;-------------------------------------
 
 ;; @desc - Opens a leveraged position using vault path
-(define-public (zest-open-add-deposit
+(define-public (zest-deposit-add-open
   (market-trait <zest-market>) (vault-trait <zest-vault>) (staking-trait <staking>)
   (sbtc-token-trait <ft>) (z-token-trait <ft>) (usdh-token-trait <ft>)
   (sbtc-amount uint) (usdh-amount uint) (min-shares uint)
@@ -147,7 +147,7 @@
       ;; Step 2: Borrow USDh and stake it in Hermetica
       (try! (zest-open market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
 
-      (print { action: "zest-open-add-deposit", user: contract-caller, data: { sbtc-amount: sbtc-amount, usdh-amount: usdh-amount } })
+      (print { action: "zest-deposit-add-open", user: contract-caller, data: { sbtc-amount: sbtc-amount, usdh-amount: usdh-amount } })
       (ok true)
     )
   )
