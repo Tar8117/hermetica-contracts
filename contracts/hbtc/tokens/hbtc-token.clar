@@ -3,7 +3,7 @@
 ;; Defines the hBTC token according to the SIP010 Standard
 (define-fungible-token hBTC)
 
-(define-constant ERR_NOT_AUTHORIZED (err u100001))
+(define-constant ERR_NOT_AUTHORIZED (err u4))
 (define-constant token-decimals u8)
 
 ;;-------------------------------------
