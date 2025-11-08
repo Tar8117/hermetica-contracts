@@ -49,7 +49,7 @@
     (match (ft-transfer? hBTC amount sender recipient)
       response (begin
         (print memo)
-        (print { action: "transfer", data: { sender: tx-sender, recipient: recipient, amount: amount, block-height: burn-block-height } })
+        (print { action: "transfer", data: { sender: tx-sender, recipient: recipient, amount: amount, block-height: stacks-block-height } })
         (ok response)
       )
       error (err error)

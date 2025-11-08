@@ -186,7 +186,7 @@
       )
       true)
 
-    (print { action: "zest-close-remove-redeem", user: contract-caller, data: { susdh-amount: susdh-amount, collateral-amount: collateral-amount, claim-ids: claim-ids } })
+    (print { action: "zest-close-remove-redeem", user: contract-caller, data: { susdh-amount: susdh-amount, collateral-amount: collateral-amount, min-sbtc-amount: min-sbtc-amount, claim-ids: claim-ids } })
     (ok true)
   )
 )

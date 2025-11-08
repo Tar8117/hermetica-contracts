@@ -88,7 +88,7 @@
     (try! (contract-call? .state check-trading-auth (contract-of staking-trait) (some (contract-of staking-silo-trait)) none none))
     (try! (as-contract (contract-call? staking-silo-trait withdraw claim-id)))
     (try! (as-contract (contract-call? .usdh-token transfer usdh-amount this-contract reserve none)))
-    (print { action: "hermetica-unstake-and-withdraw", user: contract-caller, data: { susdh-amount: amount, usdh-expected: usdh-amount, usdh-received: usdh-amount, ratio: ratio, staking: staking-trait, staking-silo: staking-silo-trait, claim-id: claim-id } })
+    (print { action: "hermetica-unstake-and-withdraw", user: contract-caller, data: { susdh-amount: amount, usdh-received: usdh-amount, ratio: ratio, staking: staking-trait, staking-silo: staking-silo-trait, claim-id: claim-id } })
     (ok usdh-amount)
   )
 )

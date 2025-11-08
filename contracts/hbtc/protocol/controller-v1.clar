@@ -109,9 +109,8 @@
   )
     (print {
       action: "log-reward",
-      case: (if (is-eq reward-after-fees u0) "zero" "profit"),
       user: contract-caller,
-      data: { reward: { gross: reward, rf: reward-rf, net: reward-net, is-positive: true }, fees: { perf: perf-fee, mgmt: mgmt-fee }, rf: { old: total-rf, new: (+ total-rf reward-rf)  } }
+      data: { case: (if (is-eq reward-after-fees u0) "zero" "profit"), reward: { gross: reward, rf: reward-rf, net: reward-net, is-positive: true }, fees: { perf: perf-fee, mgmt: mgmt-fee }, rf: { old: total-rf, new: (+ total-rf reward-rf)  } }
     })
     ;; Single batch call with commit-reward logic
     (ok (try! (contract-call? .state update-state 
@@ -135,9 +134,8 @@
   )
     (print {
       action: "log-reward",
-      case: "loss-covered",
       user: contract-caller,
-      data: { reward: { gross: reward, net: u0, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: (- total-rf req-rf) } }
+      data: { case: "loss-covered", reward: { gross: reward, net: u0, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: (- total-rf req-rf) } }
     })
     
     ;; Physical transfer if needed
@@ -167,9 +165,8 @@
   )
     (print {
       action: "log-reward",
-      case: "loss-exceeds",
       user: contract-caller,
-      data: { reward: { gross: reward, net: loss, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: u0 } }
+      data: { case: "loss-exceeds", reward: { gross: reward, net: loss, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: u0 } }
     })
     (if (> total-rf pending-rf)
       (try! (contract-call? .reserve-fund transfer sbtc-token (- total-rf pending-rf) reserve none))
