@@ -152,41 +152,31 @@
 )
 
 ;; @desc - executes a claim for each claim-id in the list
-(define-public (withdraw-many (entries (list 1000 uint)))
-  (fold withdraw-iter entries (ok u0))
-)
-
-(define-private (withdraw-iter (claim-id uint) (prev (response uint uint)))
-  (match prev
-    acc 
-      (match (withdraw claim-id)
-        assets (ok (+ acc assets))
-        error (err error)
-      )
-    error (err error)
+;; @param - entries: list of claim-ids
+(define-public (withdraw (entries (list 1000 uint)))
+  (begin
+    (try! (contract-call? .state check-is-withdraw-active))
+    (ok (map withdraw-helper entries))
   )
 )
 
-;; @desc - transfers asset to user after cooldown window has passed
-(define-public (withdraw (claim-id uint))
+;; @desc - internal function to perform the withdraw operation
+(define-private (withdraw-helper (claim-id uint))
   (let (
     (current-claim (try! (get-claim claim-id)))
     (assets (get assets current-claim))
     (fee (get fee current-claim))
     (user (get user current-claim))
-    (assets-net (- assets fee))
   )
-    (try! (contract-call? .state check-is-withdraw-active))
     (asserts! (>= (get-current-ts) (get ts current-claim)) ERR_NOT_COOLED_DOWN)
     (asserts! (get is-funded current-claim) ERR_NOT_FUNDED)
-    (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer assets-net this-contract user none)))
+    (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer (- assets fee) this-contract user none)))
     (if (> fee u0)
       (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer fee this-contract fee-collector none)))
       true
     )
     (print { action: "withdraw", user: contract-caller, data: { claim-id: claim-id, assets: assets, fee: fee, user: user, fee-address: fee-collector } })
-    (map-delete claims { claim-id: claim-id })
-    (ok assets-net)
+    (ok (map-delete claims { claim-id: claim-id }))
   )
 )
 
