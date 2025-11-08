@@ -329,10 +329,14 @@
   )
 )
 
+(define-read-only (check-is-transfer-active)
+  (ok (asserts! (get-transfer-active) ERR_TRANSFER_DISABLED))
+)
+
 (define-read-only (check-transfer-auth (asset principal))
   (begin
     (try! (check-is-vault-active))
-    (asserts! (get-transfer-active) ERR_TRANSFER_DISABLED)
+    (try! (check-is-transfer-active))
     (check-is-asset asset)
   )
 )
