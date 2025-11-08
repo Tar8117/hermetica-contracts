@@ -21,5 +21,8 @@
       ts: uint,
       is-funded: bool
     } uint))
+    (preview-deposit (uint) (response uint uint))
+    (preview-withdraw (uint) (response uint uint))
+    (preview-redeem (uint) (response uint uint))
   )
 )
