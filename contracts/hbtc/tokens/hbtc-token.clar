@@ -10,9 +10,10 @@
 ;; Const and vars
 ;;-------------------------------------
 
-(define-data-var token-uri (string-utf8 256) u"")
+(define-constant token-symbol "hBTC")
+
 (define-data-var token-name (string-ascii 32) "Hermetica hBTC")
-(define-data-var token-symbol (string-ascii 32) "hBTC")
+(define-data-var token-uri (string-utf8 256) u"")
 
 ;;-------------------------------------
 ;; SIP-010
@@ -27,7 +28,7 @@
 )
 
 (define-read-only (get-symbol)
-  (ok (var-get token-symbol))
+  (ok token-symbol)
 )
 
 (define-read-only (get-decimals)
@@ -61,17 +62,17 @@
 ;; Admin
 ;;-------------------------------------
 
+(define-public (set-token-name (value (string-ascii 32)))
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-owner tx-sender))
+    (ok (var-set token-name value))
+  )
+)
+
 (define-public (set-token-uri (value (string-utf8 256)))
   (begin
     (try! (contract-call? .hq-hbtc check-is-owner tx-sender))
     (ok (var-set token-uri value))
-  )
-)
-
-(define-public (set-token-name (name (string-ascii 32)))
-  (begin
-    (try! (contract-call? .hq-hbtc check-is-owner tx-sender))
-    (ok (var-set token-name name))
   )
 )
 
