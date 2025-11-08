@@ -296,7 +296,7 @@
 
 ;; @desc - Batch getter for deposit operation - returns all state needed for deposit validation
 (define-read-only (get-deposit-state)
-  { share-price: (get-share-price), total-assets: (get-total-assets), deposit-cap: (get-deposit-cap), min-amount: (get-min-amount) }
+  { share-price: (get-share-price), net-assets: (get-net-assets), deposit-cap: (get-deposit-cap), min-amount: (get-min-amount) }
 )
 
 ;; @desc - Batch getter for withdraw/redeem operation - returns all data needed
