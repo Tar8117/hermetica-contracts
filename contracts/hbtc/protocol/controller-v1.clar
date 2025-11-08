@@ -72,7 +72,7 @@
     (total-reserve (get-sbtc-balance reserve))
     (total-pending (+ pending-fees pending-rf))
   )
-    (try! (contract-call? .hq-hbtc check-is-rewarder contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-manager contract-caller))
 
     (asserts! (> total-pending u0) ERR_NO_PENDING_TRANSFERS)
     (asserts! (>= total-reserve total-pending) ERR_INSUFFICIENT_FUNDS)
