@@ -640,7 +640,7 @@
 
 (define-public (set-staleness-window (new-staleness-window uint))
   (begin
-    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (asserts! (<= new-staleness-window (get staleness-window max) ) ERR_ABOVE_MAX)
     (print { action: "set-staleness-window", user: contract-caller, data: { old: (get-staleness-window), new: new-staleness-window } })
     (ok (var-set staleness-window new-staleness-window))
