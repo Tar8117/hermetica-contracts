@@ -765,6 +765,7 @@
 (define-public (set-max-slippage (address principal) (max-slippage uint))
   (let (
     (entry (get-asset address))
+    (ts (unwrap! (get ts entry) ERR_NO_ENTRY))
     (updated-entry (merge entry { max-slippage: max-slippage }))
   )
     (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
