@@ -311,6 +311,7 @@
     (new-entry { active: false, ts: (some (get-current-ts)) })
   )
     (try! (check-is-owner contract-caller))
+    (try! (check-is-standard address))
     (print { action: "request-new-protocol", user: contract-caller, data: { address: address, old: (get-protocol address), new: new-entry } })
     (ok (asserts! (map-insert protocol { address: address } new-entry) ERR_DUPLICATE))
   )
