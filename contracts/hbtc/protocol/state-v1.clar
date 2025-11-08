@@ -35,7 +35,7 @@
   reserve-rate: u5000,                                            ;; [5000 bps] => 50.00% - max reserve fund allocation rate
   express-fee: u200,                                              ;; [200 bps] => 2.00% - max express withdraw fee
   cooldown: u2592000,                                             ;; [2592000 seconds] => 30 days - withdraw cooldown period
-  block-delay: u60,                                               ;; [60 stacks blocks] => ~5 min - price staleness check
+  staleness-window: u300,                                         ;; [300 seconds] => 5 min - price staleness check
 })
 
 (define-constant min {
@@ -66,7 +66,7 @@
 (define-data-var cooldown uint u259200)                           ;; [259200 seconds] => 3 days - default withdraw cooldown period
 (define-data-var express-cooldown uint u3600)                     ;; [3600 seconds] => 1 hour - express withdraw cooldown period
 (define-data-var update-window uint (* u3600 u23))                ;; [82800 seconds] => 23 hours - min time between reward updates
-(define-data-var block-delay uint u10)                            ;; [10 stacks blocks] => ~50 seconds - price staleness check
+(define-data-var staleness-window uint u50)                       ;; [50 seconds] => ~50 seconds - price staleness check
 
 ;; Operational States
 (define-data-var vault-active bool true)                          ;; vault enabled/disabled flag
@@ -207,8 +207,8 @@
   (var-get last-log-ts)
 )
 
-(define-read-only (get-block-delay)
-  (var-get block-delay)
+(define-read-only (get-staleness-window)
+  (var-get staleness-window)
 )
 
 (define-read-only (get-pending-fees)
@@ -638,12 +638,12 @@
   )
 )
 
-(define-public (set-block-delay (new-block-delay uint))
+(define-public (set-staleness-window (new-staleness-window uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
-    (asserts! (<= new-block-delay (get block-delay max) ) ERR_ABOVE_MAX)
-    (print { action: "set-block-delay", user: contract-caller, data: { old: (get-block-delay), new: new-block-delay } })
-    (ok (var-set block-delay new-block-delay))
+    (asserts! (<= new-staleness-window (get staleness-window max) ) ERR_ABOVE_MAX)
+    (print { action: "set-staleness-window", user: contract-caller, data: { old: (get-staleness-window), new: new-staleness-window } })
+    (ok (var-set staleness-window new-staleness-window))
   )
 )
 
