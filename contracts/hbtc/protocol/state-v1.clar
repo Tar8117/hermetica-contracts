@@ -24,6 +24,7 @@
 (define-constant ERR_DEVIATION (err u102014))
 (define-constant ERR_INVALID (err u102015))
 (define-constant ERR_NO_OPERATIONS (err u102016))
+(define-constant ERR_ZERO_SUPPLY (err u102017))
 
 (define-constant max {
   reward: u20,                                                    ;; [20 bps] => 0.20% - max asset reward/loss per log-reward call
@@ -492,6 +493,7 @@
       data (begin
         (try! (check-max-reward (get reward data)))
         (try! (check-update-window))
+        (asserts! (> (unwrap-panic (contract-call? .hbtc-token get-total-supply)) u0) ERR_ZERO_SUPPLY)
         (unwrap-panic (update-total-assets (get reward data) (get is-add data)))
         (update-last-log-ts)
         (print { action: "commit-reward", user: contract-caller, data: { 
