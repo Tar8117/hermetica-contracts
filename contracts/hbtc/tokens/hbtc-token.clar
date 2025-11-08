@@ -94,9 +94,3 @@
     (ft-burn? hBTC amount sender)
   )
 )
-
-;; Burn external
-(define-public (burn (amount uint))
-  (ft-burn? hBTC amount tx-sender)
-)
-
