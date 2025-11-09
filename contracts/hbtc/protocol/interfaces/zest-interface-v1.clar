@@ -130,7 +130,6 @@
 ;; @desc - Deposits assets to Zest v2 vault as liquidity provider
 (define-public (zest-deposit
   (vault-trait <zest-vault>)
-  (z-token-trait <ft>)
   (asset-trait <ft>)
   (amount uint)
   (min-shares uint))
@@ -147,9 +146,9 @@
       (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares this-contract))))
     )
       ;; Transfer z-tokens (vault shares) to reserve
-      (try! (as-contract (contract-call? z-token-trait transfer received this-contract reserve none)))
-      
-      (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, shares: received } })
+      (try! (as-contract (contract-call? vault-trait transfer received this-contract reserve none)))
+
+      (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, min-shares: min-shares, shares: received } })
       (ok received)
     )
   )
@@ -158,7 +157,6 @@
 ;; @desc - Redeems vault shares from Zest v2 vault
 (define-public (zest-redeem
   (vault-trait <zest-vault>)
-  (z-token-trait <ft>)
   (asset-trait <ft>)
   (shares uint)
   (min-amount uint))
@@ -168,17 +166,17 @@
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
     
     ;; Transfer z-tokens from reserve to this interface
-    (try! (contract-call? .reserve transfer z-token-trait shares this-contract))
+    (try! (contract-call? .reserve transfer vault-trait shares this-contract))
 
     ;; Get actual amount received
     (let (
-      ;; Redeem from Zest vault (burns z-tokens, receives underlying tokens)
+      ;; Redeem from Zest vault (burns vault shares (z-tokens), receives underlying tokens)
       (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount this-contract))))
     )
       ;; Transfer received tokens back to reserve
       (try! (as-contract (contract-call? asset-trait transfer received this-contract reserve none)))
       
-      (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, amount: received } })
+      (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, min-amount: min-amount, amount: received } })
       (ok received)
     )
   )
