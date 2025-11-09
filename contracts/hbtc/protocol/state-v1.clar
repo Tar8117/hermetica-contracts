@@ -29,7 +29,7 @@
   reward: u20,                                                    ;; [20 bps] => 0.20% - max asset reward/loss per log-reward call
   deviation: u20,                                                 ;; [20 bps] => 0.20% - max share price deviation per update
   slippage: u500,                                                 ;; [500 bps] => 5.00% - max slippage for asset trades
-  mgmt-fee: u54,                                                  ;; [54 bps/10000] => 0.0054% daily (2% annualized) - max management fee
+  mgmt-fee: u55,                                                  ;; [55 bps/10000] => 0.0055% daily (~2% annualized) - max management fee
   perf-fee: u2000,                                                ;; [2000 bps] => 20.00% - max performance fee on profits
   exit-fee: u100,                                                 ;; [100 bps] => 1.00% - max exit fee on withdraws
   reserve-rate: u5000,                                            ;; [5000 bps] => 50.00% - max reserve fund allocation rate
