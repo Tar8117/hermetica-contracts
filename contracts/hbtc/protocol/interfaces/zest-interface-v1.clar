@@ -21,17 +21,11 @@
 (define-public (zest-collateral-add
   (market-trait <zest-market>)
   (asset-trait <ft>)
-  (amount uint)
-  (price-feed-1 (optional (buff 8192)))
-  (price-feed-2 (optional (buff 8192))))
+  (amount uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of market-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    
-    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
-    (try! (write-feed price-feed-1))
-    (try! (write-feed price-feed-2))
     
     ;; Transfer tokens from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
@@ -64,7 +58,7 @@
     (try! (as-contract (contract-call? market-trait collateral-remove asset-trait amount this-contract)))
     
     ;; Transfer tokens back to reserve
-    (try! (as-contract (contract-call? asset-trait transfer amount this-contract .reserve none)))
+    (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
     
     (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
     (ok true)
@@ -95,7 +89,7 @@
     (try! (as-contract (contract-call? market-trait borrow asset-trait amount this-contract)))
     
     ;; Transfer borrowed tokens to reserve
-    (try! (as-contract (contract-call? asset-trait transfer amount this-contract .reserve none)))
+    (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
     
     (print { action: "zest-borrow", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
     (ok true)
@@ -138,17 +132,11 @@
   (vault-trait <zest-vault>)
   (asset-trait <ft>)
   (amount uint)
-  (min-shares uint)
-  (price-feed-1 (optional (buff 8192)))
-  (price-feed-2 (optional (buff 8192))))
+  (min-shares uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    
-    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
-    (try! (write-feed price-feed-1))
-    (try! (write-feed price-feed-2))
     
     ;; Transfer tokens from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
@@ -158,7 +146,7 @@
       (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares this-contract))))
     )
       ;; Transfer z-tokens (vault shares) to reserve
-      (try! (as-contract (contract-call? vault-trait transfer received this-contract .reserve none)))
+      (try! (as-contract (contract-call? vault-trait transfer received this-contract reserve none)))
 
       (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, min-shares: min-shares, shares: received } })
       (ok received)
@@ -171,17 +159,11 @@
   (vault-trait <zest-vault>)
   (asset-trait <ft>)
   (shares uint)
-  (min-amount uint)
-  (price-feed-1 (optional (buff 8192)))
-  (price-feed-2 (optional (buff 8192))))
+  (min-amount uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
-    
-    ;; Update Pyth price feed for sBTC before operation (DIA handles USDh)
-    (try! (write-feed price-feed-1))
-    (try! (write-feed price-feed-2))
     
     ;; Transfer z-tokens from reserve to this interface
     (try! (contract-call? .reserve transfer vault-trait shares this-contract))
@@ -192,7 +174,7 @@
       (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount this-contract))))
     )
       ;; Transfer received tokens back to reserve
-      (try! (as-contract (contract-call? asset-trait transfer received this-contract .reserve none)))
+      (try! (as-contract (contract-call? asset-trait transfer received this-contract reserve none)))
       
       (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, min-amount: min-amount, amount: received } })
       (ok received)
@@ -232,6 +214,7 @@
           wormhole-core-contract: 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.wormhole-core-v4,
         }
       ))
+      (print { action: "write-feed", user: contract-caller, data: { requested-by: this-contract, oracle: 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-oracle-v4 } })
       (ok true)
     )
     ;; do nothing if none
