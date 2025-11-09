@@ -545,6 +545,7 @@
     (asserts! (<= perf-fee (get perf-fee max)) ERR_ABOVE_MAX)
     (asserts! (<= exit-fee (get exit-fee max)) ERR_ABOVE_MAX)
     (asserts! (<= express-fee (get express-fee max)) ERR_ABOVE_MAX)
+    (asserts! (<= exit-fee express-fee) ERR_INVALID)
     (print { action: "set-fees", user: contract-caller, data: { old: (get-fees), new: new-fees } })
     (ok (var-set fees new-fees))
   )
@@ -563,6 +564,7 @@
   (begin
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= new-cooldown (get cooldown max) ) ERR_ABOVE_MAX)
+    (asserts! (>= new-cooldown (get-express-cooldown)) ERR_INVALID)
     (print { action: "set-cooldown", user: contract-caller, data: { old: (get-cooldown), new: new-cooldown } })
     (ok (var-set cooldown new-cooldown))
   )
@@ -572,6 +574,7 @@
   (begin
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= new-cooldown (get cooldown max)) ERR_ABOVE_MAX)
+    (asserts! (<= new-cooldown (get-cooldown)) ERR_INVALID)
     (print { action: "set-express-cooldown", user: contract-caller, data: { old: (get-express-cooldown), new: new-cooldown } })
     (ok (var-set express-cooldown new-cooldown))
   )
