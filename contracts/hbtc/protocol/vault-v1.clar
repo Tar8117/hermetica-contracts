@@ -95,7 +95,6 @@
   (let (
     (new-claim-id (try! (contract-call? .state increment-claim-id)))
     (fee (/ (* assets exit-fee) bps-base))
-    (assets-net (- assets fee))
     (ts (+ (get-current-ts) cooldown))
   )
     (map-set claims { claim-id: new-claim-id } 
@@ -215,7 +214,7 @@
     (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
   )
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
-    (if is-manager true (asserts! is-cooled-down ERR_NOT_COOLED_DOWN)) ;; if the caller is a manager, skip the cooldown check
+    (asserts! (or is-manager is-cooled-down) ERR_NOT_COOLED_DOWN)
 
     (try! (contract-call? .reserve transfer sbtc-token assets this-contract))
     (try! (contract-call? .state update-state 
