@@ -6,7 +6,8 @@
     ;; User functions
     (deposit (uint (optional (buff 64))) (response uint uint))
     (init-withdraw (uint bool) (response uint uint))
-    (withdraw ((list 1000 uint)) (response (list 1000 (response bool uint)) uint))
+    (withdraw (uint) (response uint uint))
+    (withdraw-many ((list 1000 uint)) (response (list 1000 (response uint uint)) uint))
     
     ;; Protocol functions
     (fund-claim (uint) (response bool uint))
