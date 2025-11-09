@@ -66,7 +66,7 @@
 (define-data-var min-amount uint u0)                              ;; [8 decimals] - minimum deposit amount
 (define-data-var cooldown uint u259200)                           ;; [259200 seconds] => 3 days - default withdraw cooldown period
 (define-data-var express-cooldown uint u3600)                     ;; [3600 seconds] => 1 hour - express withdraw cooldown period
-(define-data-var update-window uint (* u3600 u23))                ;; [82800 seconds] => 23 hours - min time between reward updates
+(define-data-var update-window uint u82800)                       ;; [82800 seconds] => 23 hours - min time between reward updates
 (define-data-var staleness-window uint u50)                       ;; [50 seconds] => ~50 seconds - price staleness check
 
 ;; Operational States
