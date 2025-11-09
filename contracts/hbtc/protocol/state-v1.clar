@@ -560,6 +560,17 @@
   )
 )
 
+(define-private (remove-custom-exit-fee-iter (address principal) (prev (response bool uint)))
+  (ok (and (try! prev) (map-delete custom-exit-fee { address: address }))))
+
+(define-public (remove-custom-exit-fee (addresses (list 200 principal)))
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-fee-setter contract-caller))
+    (print { action: "remove-custom-exit-fee", user: contract-caller, data: { addresses: addresses } })
+    (fold remove-custom-exit-fee-iter addresses (ok true))
+  )
+)
+
 (define-public (set-cooldown (new-cooldown uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
@@ -586,6 +597,17 @@
     (asserts! (<= new-cooldown (get cooldown max) ) ERR_ABOVE_MAX)
     (print { action: "set-custom-cooldown", user: contract-caller, data: { address: address, old: (get-custom-cooldown address false), new: new-cooldown } })
     (ok (map-set custom-cooldown {  address: address } { cooldown: new-cooldown }))
+  )
+)
+
+(define-private (remove-custom-cooldown-iter (address principal) (prev (response bool uint)))
+  (ok (and (try! prev) (map-delete custom-cooldown { address: address }))))
+
+(define-public (remove-custom-cooldown (addresses (list 200 principal)))
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
+    (print { action: "remove-custom-cooldown", user: contract-caller, data: { addresses: addresses } })
+    (fold remove-custom-cooldown-iter addresses (ok true))
   )
 )
 
