@@ -103,7 +103,8 @@
   (perf-fee uint) (mgmt-fee uint)
   (reserve-rate uint))
   (let (
-    (reward-after-fees (- reward (+ perf-fee mgmt-fee)))
+    (total-fees (+ perf-fee mgmt-fee))
+    (reward-after-fees (- reward total-fees))
     (reward-rf (/ (* reward-after-fees reserve-rate) bps-base))
     (reward-net (- reward-after-fees reward-rf))
   )
@@ -115,7 +116,7 @@
     ;; Single batch call with commit-reward logic
     (ok (try! (contract-call? .state update-state 
       (list
-        { type: "pending-fees", amount: (+ perf-fee mgmt-fee), is-add: true }
+        { type: "pending-fees", amount: total-fees, is-add: true }
         { type: "pending-rf", amount: reward-rf, is-add: true })
       (some { reward: reward, is-add: true })
       none)))

@@ -365,7 +365,7 @@
     (ok (asserts! (<= amount (/ (* (get-max-reward) (get-total-assets)) bps-base)) ERR_ABOVE_MAX))
 )
 
-(define-public (check-trading-auth (contract-1 principal) (contract-2 (optional principal)) (asset-1 (optional principal)) (asset-2 (optional principal)))
+(define-read-only (check-trading-auth (contract-1 principal) (contract-2 (optional principal)) (asset-1 (optional principal)) (asset-2 (optional principal)))
   (begin
     (try! (check-is-trading-active))
     (try! (check-is-contract contract-1))
@@ -397,9 +397,10 @@
 (define-private (update-total-assets (amount uint) (is-add bool))
   (let (
     (current (get-total-assets))
+    (new (if is-add (+ current amount) (- current amount)))
   )
-    (var-set total-assets (if is-add (+ current amount) (- current amount)))
-    (print { action: "update-total-assets", data: { old: current, new: (get-total-assets), is-add: is-add } })
+    (var-set total-assets new)
+    (print { action: "update-total-assets", data: { old: current, new: new, is-add: is-add } })
     (ok true)
   )
 )
@@ -419,9 +420,10 @@
 (define-private (update-pending-claims (amount uint) (is-add bool))
   (let (
     (current (get-pending-claims))
+    (new (if is-add (+ current amount) (- current amount)))
   )
-    (var-set pending-claims (if is-add (+ current amount) (- current amount)))
-    (print { action: "update-pending-claims", data: { old: current, new: (get-pending-claims), is-add: is-add } })
+    (var-set pending-claims new)
+    (print { action: "update-pending-claims", data: { old: current, new: new, is-add: is-add } })
     (ok true)
   )
 )
@@ -429,9 +431,10 @@
 (define-private (update-pending-fees (amount uint) (is-add bool))
   (let (
     (current (get-pending-fees))
+    (new (if is-add (+ current amount) (- current amount)))
   )
-    (var-set pending-fees (if is-add (+ current amount) (- current amount)))
-    (print { action: "update-pending-fees", data: { old: current, new: (get-pending-fees), is-add: is-add } })
+    (var-set pending-fees new)
+    (print { action: "update-pending-fees", data: { old: current, new: new, is-add: is-add } })
     (ok true)
   )
 )
@@ -439,9 +442,10 @@
 (define-private (update-pending-rf (amount uint) (is-add bool))
   (let (
     (current (get-pending-rf))
+    (new (if is-add (+ current amount) (- current amount)))
   )
-    (var-set pending-rf (if is-add (+ current amount) (- current amount)))
-    (print { action: "update-pending-rf", data: { old: current, new: (get-pending-rf), is-add: is-add } })
+    (var-set pending-rf new)
+    (print { action: "update-pending-rf", data: { old: current, new: new, is-add: is-add } })
     (ok true)
   )
 )
@@ -511,12 +515,17 @@
           } })
           true)
         true)
+      true)
+    
+    ;; POST-CONDITION: Check share price deviation after all updates
+    (let (
+      (new-share-price (get-share-price))
+    )
+      (try! (check-max-deviation init-share-price new-share-price post-share-supply))
       
-      ;; POST-CONDITION: Check share price deviation after all updates
-      (try! (check-max-deviation init-share-price (get-share-price) post-share-supply))
-      
-      (print { action: "update-state", user: contract-caller, data: { operations: operations, shares: shares, share-price: { old: init-share-price, new: (get-share-price) } } })
-      (ok true))
+      (print { action: "update-state", user: contract-caller, data: { operations: operations, shares: shares, share-price: { old: init-share-price, new: new-share-price } } })
+      (ok true)
+    )
   )
 )
 
@@ -813,6 +822,7 @@
     (new-entry { active: false, ts: (some (get-current-ts)) })
   )
     (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
+    (try! (contract-call? .hq-hbtc check-is-standard address))
     (print { action: "request-new-contract", user: contract-caller, data: { address: address, old: (get-contract address), new: new-entry } })
     (ok (asserts! (map-insert contracts { address: address } new-entry) ERR_DUPLICATE))
   )
