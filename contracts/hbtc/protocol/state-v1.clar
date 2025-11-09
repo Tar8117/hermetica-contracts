@@ -375,15 +375,15 @@
 )
 
 ;; Share Price Protection
-(define-read-only (check-max-deviation (old-price uint) (new-price uint))
+(define-read-only (check-max-deviation (old-price uint) (new-price uint) (share-supply uint))
   (let (
     (threshold (get-max-deviation))
     (abs-diff (if (> new-price old-price) 
                   (- new-price old-price) 
                   (- old-price new-price)))
-    (deviation (if (> old-price u0)
+    (deviation (if (> share-supply u0)
                   (/ (* abs-diff bps-base) old-price)
-                  u0))  ;; Handle edge case of first deposit
+                  u0))  ;; Handle edge case of last withdraw/redeem
   )
     (print { action: "check-max-deviation", data: { old: old-price, new: new-price, deviation: deviation, max-deviation: threshold } })
     (ok (asserts! (<= deviation threshold) ERR_DEVIATION))
@@ -404,15 +404,15 @@
   )
 )
 
-(define-private (update-shares (amount uint) (is-add bool) (user principal))
+(define-private (update-shares (amount uint) (is-add bool) (user principal) (current-supply uint))
   (let (
-    (current (unwrap-panic (contract-call? .hbtc-token get-total-supply)))
+    (new-supply (if is-add (+ current-supply amount) (- current-supply amount)))
   )
     (if is-add 
       (try! (contract-call? .hbtc-token mint-for-protocol amount user)) 
       (try! (contract-call? .hbtc-token burn-for-protocol amount user)))
-    (print { action: "update-shares", data: { old: current, new: (if is-add (+ current amount) (- current amount)), user: user, is-add: is-add } })
-    (ok true)
+    (print { action: "update-shares", data: { old: current-supply, new: new-supply, user: user, is-add: is-add } })
+    (ok new-supply)
   )
 )
 
@@ -481,6 +481,7 @@
   (let (
     (init-share-price (get-share-price))
     (init-total-assets (get-total-assets))
+    (current-share-supply (unwrap-panic (contract-call? .hbtc-token get-total-supply)))
   )
     (try! (contract-call? .hq-hbtc check-is-protocol contract-caller))
     (asserts! (> (len operations) u0) ERR_NO_OPERATIONS)
@@ -488,33 +489,33 @@
     ;; Execute ALL operations before checking
     (try! (fold execute-update operations (ok true)))
     
-    ;; Optionally handle shares update
-    (match shares
-      data (try! (update-shares (get amount data) (get is-add data) (get user data)))
-      true)
-    
-    ;; Optionally handle commit-reward logic
-    (match reward
-      data (begin
-        (try! (check-max-reward (get reward data)))
-        (try! (check-update-window))
-        (unwrap-panic (update-total-assets (get reward data) (get is-add data)))
-        (update-last-log-ts)
-        (print { action: "commit-reward", user: contract-caller, data: { 
-          share-price: { old: init-share-price, new: (get-share-price) },
-          total-assets: { old: init-total-assets, new: (get-total-assets) },
-          return: (/ (* (get reward data) bps-base pct-base) init-total-assets),
-          next-log-ts: (get-last-log-ts),
-        } })
+    (let (
+      (post-share-supply
+        (match shares
+          data (try! (update-shares (get amount data) (get is-add data) (get user data) current-share-supply))
+          current-share-supply))
+    )
+      ;; Optionally handle commit-reward logic
+      (match reward
+        data (begin
+          (try! (check-max-reward (get reward data)))
+          (try! (check-update-window))
+          (unwrap-panic (update-total-assets (get reward data) (get is-add data)))
+          (update-last-log-ts)
+          (print { action: "commit-reward", user: contract-caller, data: { 
+            share-price: { old: init-share-price, new: (get-share-price) },
+            total-assets: { old: init-total-assets, new: (get-total-assets) },
+            return: (/ (* (get reward data) bps-base pct-base) init-total-assets),
+            next-log-ts: (get-last-log-ts),
+          } })
+          true)
         true)
-      true)
-    
-    ;; POST-CONDITION: Check share price deviation after all updates
-    (try! (check-max-deviation init-share-price (get-share-price)))
-    
-    (print { action: "update-state", user: contract-caller,
-             data: { operations: operations, shares: shares, share-price: { old: init-share-price, new: (get-share-price) } } })
-    (ok true)
+      
+      ;; POST-CONDITION: Check share price deviation after all updates
+      (try! (check-max-deviation init-share-price (get-share-price) post-share-supply))
+      
+      (print { action: "update-state", user: contract-caller, data: { operations: operations, shares: shares, share-price: { old: init-share-price, new: (get-share-price) } } })
+      (ok true))
   )
 )
 
