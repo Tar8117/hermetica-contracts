@@ -46,13 +46,33 @@
 ;;-------------------------------------
 
 ;; @desc - calculate how many shares (hBTC tokens) you'd get for a given asset amount
-(define-read-only (convert-to-shares (assets uint))
-  (/ (* assets share-base) (contract-call? .state get-share-price))
+(define-read-only (convert-to-shares (assets uint) (is-round-up bool))
+  (let ((share-price (contract-call? .state get-share-price)))
+    (if is-round-up
+      (/ (+ (* assets share-base) (- share-price u1)) share-price)
+      (/ (* assets share-base) share-price)
+    )
+  )
 )
 
 ;; @desc - calculate how many assets (sBTC) a given number of shares is worth
 (define-read-only (convert-to-assets (shares uint))
   (/ (* shares (contract-call? .state get-share-price)) share-base)
+)
+
+;; @desc - preview how many shares would be received for depositing a given asset amount
+(define-read-only (preview-deposit (assets uint))
+  (convert-to-shares assets false)
+)
+
+;; @desc - preview how many shares would be required to withdraw a given asset amount
+(define-read-only (preview-withdraw (assets uint))
+  (convert-to-shares assets true)
+)
+
+;; @desc - preview how many assets would be received for redeeming a given number of shares
+(define-read-only (preview-redeem (shares uint))
+  (convert-to-assets shares)
 )
 
 (define-read-only (get-claim (id uint))
@@ -71,7 +91,7 @@
 (define-public (deposit (assets uint) (affiliate (optional (buff 64))))
   (let (
     (state (contract-call? .state get-deposit-state))
-    (shares (/ (* assets share-base) (get share-price state)))
+    (shares (preview-deposit assets))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
@@ -120,8 +140,7 @@
 (define-public (init-withdraw (assets uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (share-price (get share-price state))
-    (shares (/ (+ (* assets share-base) (- share-price u1)) share-price))
+    (shares (preview-withdraw assets))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
@@ -138,7 +157,7 @@
 (define-public (init-redeem (shares uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (assets (/ (* shares (get share-price state)) share-base))
+    (assets (preview-redeem shares))
   )
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
