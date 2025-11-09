@@ -240,6 +240,7 @@
   )
     (try! (check-is-owner contract-caller))
     (try! (check-is-standard address))
+    (asserts! (not (is-eq address (get-owner))) ERR_DUPLICATE)
     (print { action: "request-owner-update", user: contract-caller, data: { old: (get-next-owner), new: new-entry } })
     (ok (var-set next-owner new-entry))
   )
