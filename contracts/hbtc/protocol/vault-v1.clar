@@ -62,17 +62,17 @@
 
 ;; @desc - preview how many shares would be received for depositing a given asset amount
 (define-read-only (preview-deposit (assets uint))
-  (ok (convert-to-shares assets false))
+  (convert-to-shares assets false)
 )
 
 ;; @desc - preview how many shares would be required to withdraw a given asset amount
 (define-read-only (preview-withdraw (assets uint))
-  (ok (convert-to-shares assets true))
+  (convert-to-shares assets true)
 )
 
 ;; @desc - preview how many assets would be received for redeeming a given number of shares
 (define-read-only (preview-redeem (shares uint))
-  (ok (convert-to-assets shares))
+  (convert-to-assets shares)
 )
 
 (define-read-only (get-claim (id uint))
@@ -91,7 +91,7 @@
 (define-public (deposit (assets uint) (affiliate (optional (buff 64))))
   (let (
     (state (contract-call? .state get-deposit-state))
-    (shares (unwrap-panic (preview-deposit assets)))
+    (shares (preview-deposit assets))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
@@ -141,7 +141,7 @@
 (define-public (init-withdraw (assets uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (shares (unwrap-panic (preview-withdraw assets)))
+    (shares (preview-withdraw assets))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
@@ -158,7 +158,7 @@
 (define-public (init-redeem (shares uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (assets (unwrap-panic (preview-redeem shares)))
+    (assets (preview-redeem shares))
   )
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
