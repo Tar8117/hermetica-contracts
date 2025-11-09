@@ -15,6 +15,7 @@
 (define-constant ERR_NOT_COOLED_DOWN (err u103005))
 (define-constant ERR_ALREADY_FUNDED (err u103006))
 (define-constant ERR_NOT_FUNDED (err u103007))
+(define-constant ERR_EMPTY_LIST (err u103008))
 
 (define-constant share-base u100000000)                         ;; 10^8 = 100000000 (share price base)
 (define-constant bps-base u10000)                               ;; 10^4 = 10000 (basis points base)
@@ -34,8 +35,10 @@
   }
   {
     user: principal,
-    assets: uint,                                 ;; gross asset amount (includes fee)
+    shares: uint,                                 ;; number of hBTC shares to burn at funding time
+    assets: uint,                                 ;; gross asset amount (includes fee) - calculated at funding time
     fee: uint,                                    ;; fee amount in asset
+    fee-bps: uint,                                ;; fee basis points
     ts: uint,                                     ;; timestamp in s claim after cooldown
     is-funded: bool,                              ;; true if the claim has been funded
   }
@@ -46,13 +49,8 @@
 ;;-------------------------------------
 
 ;; @desc - calculate how many shares (hBTC tokens) you'd get for a given asset amount
-(define-read-only (convert-to-shares (assets uint) (is-round-up bool))
-  (let ((share-price (contract-call? .state get-share-price)))
-    (if is-round-up
-      (/ (+ (* assets share-base) (- share-price u1)) share-price)
-      (/ (* assets share-base) share-price)
-    )
-  )
+(define-read-only (convert-to-shares (assets uint))
+  (/ (* assets share-base) (contract-call? .state get-share-price))
 )
 
 ;; @desc - calculate how many assets (sBTC) a given number of shares is worth
@@ -62,12 +60,7 @@
 
 ;; @desc - preview how many shares would be received for depositing a given asset amount
 (define-read-only (preview-deposit (assets uint))
-  (convert-to-shares assets false)
-)
-
-;; @desc - preview how many shares would be required to withdraw a given asset amount
-(define-read-only (preview-withdraw (assets uint))
-  (convert-to-shares assets true)
+  (convert-to-shares assets)
 )
 
 ;; @desc - preview how many assets would be received for redeeming a given number of shares
@@ -110,84 +103,65 @@
   )
 )
 
-;; @desc - shared claim creation logic for both withdraw and redeem operations
-(define-private (create-claim (assets uint) (shares uint) (exit-fee uint) (cooldown uint))
+;; @desc - creates a claim for redeem operations
+(define-private (create-claim (shares uint) (exit-fee uint) (cooldown uint))
   (let (
     (new-claim-id (try! (contract-call? .state increment-claim-id)))
-    (fee (/ (* assets exit-fee) bps-base))
     (ts (+ (get-current-ts) cooldown))
   )
+    ;; Transfer shares from user to vault
+    (try! (contract-call? .hbtc-token transfer shares contract-caller this-contract none))
+    
     (map-set claims { claim-id: new-claim-id } 
       {
         user: contract-caller,
-        assets: assets,
-        fee: fee,
+        shares: shares,
+        assets: u0,  ;; Will be calculated at funding time
+        fee: u0,     ;; Will be calculated at funding time
+        fee-bps: exit-fee,
         ts: ts,
         is-funded: false
       }
     )
-    (try! (contract-call? .state update-state 
-      (list 
-        { type: "pending-claims", amount: assets, is-add: true })
-      none
-      (some { amount: shares, is-add: false, user: contract-caller })))
-    (print { action: "create-claim", user: contract-caller, data: { claim-id: new-claim-id, shares: shares, assets: assets, fee: fee, cooldown: cooldown, ts: ts } })
+    (print { action: "create-claim", user: contract-caller, data: { claim-id: new-claim-id, shares: shares, cooldown: cooldown, fee-bps: exit-fee, ts: ts } })
     (ok new-claim-id)
   )
 )
 
-;; @desc - creates a claim to withdraw asset after cooldown period has passed
-(define-public (init-withdraw (assets uint) (is-express bool))
-  (let (
-    (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (shares (preview-withdraw assets))
-  )
-    (asserts! (> assets u0) ERR_INVALID_AMOUNT)
-    (try! (contract-call? .blacklist check-is-not-soft contract-caller))
-    (try! (contract-call? .state check-is-withdraw-active))
-
-    (let ((claim-id (try! (create-claim assets shares (get exit-fee state) (get cooldown state)))))
-      (print { action: "init-withdraw", user: contract-caller, data: { claim-id: claim-id, assets: assets, shares: shares, is-express: is-express } })
-      (ok claim-id)
-    )
-  )
-)
-
 ;; @desc - creates a claim to redeem shares for assets after cooldown period has passed
-(define-public (init-redeem (shares uint) (is-express bool))
+(define-public (request-redeem (shares uint) (is-express bool))
   (let (
-    (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (assets (preview-redeem shares))
+    (state (contract-call? .state get-redeem-state contract-caller is-express))
   )
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
-    (try! (contract-call? .state check-is-withdraw-active))
+    (try! (contract-call? .state check-is-redeem-active))
 
-    (let ((claim-id (try! (create-claim assets shares (get exit-fee state) (get cooldown state)))))
-      (print { action: "init-redeem", user: contract-caller, data: { claim-id: claim-id, assets: assets, shares: shares, is-express: is-express } })
+    (let ((claim-id (try! (create-claim shares (get exit-fee state) (get cooldown state)))))
+      (print { action: "init-redeem", user: contract-caller, data: { claim-id: claim-id, shares: shares, is-express: is-express } })
       (ok claim-id)
     )
   )
 )
 
 ;; @desc - executes a claim for each claim-id in the list
-(define-public (withdraw-many (entries (list 1000 uint)))
+(define-public (redeem-many (entries (list 1000 uint)))
   (begin
-    (try! (contract-call? .state check-is-withdraw-active))
-    (ok (map withdraw-internal entries))
+    (try! (contract-call? .state check-is-redeem-active))
+    (ok (map redeem-internal entries))
   )
 )
 
 ;; @desc - transfers asset to user after cooldown window has passed
-(define-public (withdraw (claim-id uint))
+(define-public (redeem (claim-id uint))
   (begin
-    (try! (contract-call? .state check-is-withdraw-active))
-    (withdraw-internal claim-id)
+    (try! (contract-call? .state check-is-redeem-active))
+    (redeem-internal claim-id)
   )
 )
 
 ;; @desc - internal function to perform the withdraw operation
-(define-private (withdraw-internal (claim-id uint))
+(define-private (redeem-internal (claim-id uint))
   (let (
     (current-claim (try! (get-claim claim-id)))
     (assets (get assets current-claim))
@@ -202,7 +176,7 @@
       (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer fee this-contract fee-collector none)))
       true
     )
-    (print { action: "withdraw", user: contract-caller, data: { claim-id: claim-id, assets: assets, fee: fee, user: user, fee-address: fee-collector } })
+    (print { action: "redeem", user: contract-caller, data: { claim-id: claim-id, assets: assets, fee: fee, user: user, fee-address: fee-collector } })
     (map-delete claims { claim-id: claim-id })
     (ok assets-net)
   )
@@ -212,37 +186,96 @@
 ;; Protocol
 ;;-------------------------------------
 
-(define-public (fund-claim-many (claim-ids (list 1000 uint)))
-  (fold fund-claim-iter claim-ids (ok true))
+;; @desc - Funds a single claim
+(define-public (fund-claim (claim-id uint))
+  (let (
+    (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
+    (share-price (contract-call? .state get-share-price))
+    (result (try! (process-claim claim-id u0 u0 share-price is-manager)))
+  )
+    ;; Transfer assets from reserve to vault and update state
+    (try! (contract-call? .reserve transfer sbtc-token (get total-assets result) this-contract))
+    (try! (contract-call? .state update-state 
+      (list
+        { type: "total-assets", amount: (get total-assets result), is-add: false })
+      none
+      (some { amount: (get total-shares result), is-add: false, user: this-contract })))
+    (print { action: "fund-claim", user: contract-caller, data: { claim-id: claim-id, shares: (get total-shares result), assets: (get total-assets result), share-price: share-price } })
+    (ok (get total-assets result))
+  )
 )
 
-(define-private (fund-claim-iter (claim-id uint) (prev (response bool uint)))
+;; @desc - Optimized batch funding of claims
+(define-public (fund-claim-many (claim-ids (list 1000 uint)))
+  (begin
+    (asserts! (> (len claim-ids) u0) ERR_EMPTY_LIST)
+    (let (
+      (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
+      (share-price (contract-call? .state get-share-price))
+      (initial-accum { total-shares: u0, total-assets: u0, share-price: share-price, is-manager: is-manager })
+    )
+      (match (fold fund-claim-iter claim-ids (ok initial-accum))
+        accum
+          (begin
+            ;; Transfer accumulated assets from reserve to vault in a single batch and update state
+            (try! (contract-call? .reserve transfer sbtc-token (get total-assets accum) this-contract))
+            (try! (contract-call? .state update-state 
+              (list
+                { type: "total-assets", amount: (get total-assets accum), is-add: false })
+              none
+              (some { amount: (get total-shares accum), is-add: false, user: this-contract })))
+            (print { action: "fund-claim-many", user: contract-caller, data: { total-shares: (get total-shares accum), total-assets: (get total-assets accum) } })
+            (ok true)
+          )
+        error (err error)
+      )
+    )
+  )
+)
+
+;; @desc - Iterator function for fund-claim-many that processes each claim and accumulates totals
+(define-private (fund-claim-iter (claim-id uint) (prev (response { total-shares: uint, total-assets: uint, share-price: uint, is-manager: bool } uint)))
   (match prev
-    success (fund-claim claim-id)
+    accum
+      (let (
+        (result (try! (process-claim 
+          claim-id 
+          (get total-shares accum) 
+          (get total-assets accum)
+          (get share-price accum)
+          (get is-manager accum))))
+      )
+        (ok { 
+          total-shares: (get total-shares result), 
+          total-assets: (get total-assets result),
+          share-price: (get share-price accum),
+          is-manager: (get is-manager accum)
+        })
+      )
     error (err error)
   )
 )
 
-;; @desc - called by the protocol to fund a claim 
-(define-public (fund-claim (claim-id uint))
+;; @desc - Processes a single claim for funding (validates, calculates assets/fee, updates claim map)
+(define-private (process-claim 
+  (claim-id uint) 
+  (shares-accum uint) 
+  (assets-accum uint)
+  (share-price uint)
+  (is-manager bool))
   (let (
     (claim (try! (get-claim claim-id)))
-    (assets (get assets claim))
+    (shares (get shares claim))
     (is-cooled-down (>= (get-current-ts) (get ts claim)))
-    (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
+    (assets (convert-to-assets shares))
+    (fee (/ (* assets (get fee-bps claim)) bps-base))
   )
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
-    (asserts! (or is-manager is-cooled-down) ERR_NOT_COOLED_DOWN)
-
-    (try! (contract-call? .reserve transfer sbtc-token assets this-contract))
-    (try! (contract-call? .state update-state 
-      (list
-        { type: "total-assets", amount: assets, is-add: false }
-        { type: "pending-claims", amount: assets, is-add: false })
-      none
-      none))
-    (map-set claims { claim-id: claim-id } (merge claim { is-funded: true }))
-    (print { action: "fund-claim", user: contract-caller, is-manager: is-manager, data: { claim-id: claim-id, claim: (try! (get-claim claim-id)) } })
-    (ok true)
+    (if is-manager true (asserts! is-cooled-down ERR_NOT_COOLED_DOWN)) ;; if the caller is a manager, skip the cooldown check
+    
+    ;; Update claim with calculated assets and fee, mark as funded
+    (map-set claims { claim-id: claim-id } (merge claim { assets: assets, fee: fee, is-funded: true }))
+    (print { action: "process-claim", user: contract-caller, data: { claim-id: claim-id, shares: shares, assets: assets, fee: fee, share-price: share-price, claimed-by-manager: is-manager } })
+    (ok { total-shares: (+ shares-accum shares), total-assets: (+ assets-accum assets) })
   )
 )
