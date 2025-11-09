@@ -25,12 +25,12 @@
 (define-public (log-reward (reward uint) (is-positive bool))
   (let (
     (state (contract-call? .state get-reward-state))
-    (total-assets (get total-assets state))
     (fees (get fees state))
     (pending-rf (get pending-rf state))
     (reserve-rate (get reserve-rate state))
-    (perf-fee (if is-positive (/ (* (get perf-fee fees) reward) bps-base) u0))
     (mgmt-fee (/ (* (get mgmt-fee fees) (get net-assets state)) bps-base pct-base))
+    (reward-after-mgmt-fee (if (>= reward mgmt-fee) (- reward mgmt-fee) u0))
+    (perf-fee (if is-positive (/ (* (get perf-fee fees) reward-after-mgmt-fee) bps-base) u0))
     (total-fees (+ perf-fee mgmt-fee))
     (is-profit (and is-positive (>= reward total-fees)))
     (req-rf (if is-profit
