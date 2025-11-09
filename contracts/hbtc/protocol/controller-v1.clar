@@ -109,9 +109,8 @@
   )
     (print {
       action: "log-reward",
-      case: (if (is-eq reward-after-fees u0) "zero" "profit"),
       user: contract-caller,
-      data: { reward: { gross: reward, rf: reward-rf, net: reward-net, is-positive: true }, fees: { perf: perf-fee, mgmt: mgmt-fee }, rf: { old: total-rf, new: (+ total-rf reward-rf), required: reward-rf } }
+      data: { case: (if (is-eq reward-after-fees u0) "zero" "profit"), reward: { gross: reward, rf: reward-rf, net: reward-net, is-positive: true }, fees: { perf: perf-fee, mgmt: mgmt-fee }, rf: { old: total-rf, new: (+ total-rf reward-rf), required: reward-rf } }
     })
     ;; Single batch call with commit-reward logic
     (ok (try! (contract-call? .state update-state 
@@ -135,9 +134,8 @@
   )
     (print {
       action: "log-reward",
-      case: "loss-covered",
       user: contract-caller,
-      data: { reward: { gross: reward, net: u0, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: (- total-rf req-rf), required: req-rf } }
+      data: { case: "loss-covered", reward: { gross: reward, net: u0, rf: u0, is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: (- total-rf req-rf), required: req-rf } }
     })
     
     ;; Physical transfer if needed
@@ -177,13 +175,8 @@
   )
     (print {
       action: "log-reward",
-      case: "loss-exceeds",
       user: contract-caller,
-      data: { 
-        reward: { gross: reward, net: (get reward reward-delta), rf: transfer-amount, is-add: (get is-add reward-delta), is-positive: is-positive }, 
-        fees: { perf: u0, mgmt: mgmt-fee }, 
-        rf: { old: total-rf, new: u0, required: req-rf }
-      }
+      data: { case: "loss-exceeds", reward: { gross: reward, net: (get reward reward-delta), rf: transfer-amount, is-add: (get is-add reward-delta), is-positive: is-positive }, fees: { perf: u0, mgmt: mgmt-fee }, rf: { old: total-rf, new: u0, required: req-rf } }
     })
 
     (if (> transfer-amount u0)

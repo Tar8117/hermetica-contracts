@@ -48,7 +48,7 @@
     (asserts! (or (is-eq sender tx-sender) (is-eq sender contract-caller)) ERR_NOT_AUTHORIZED)
     (try! (ft-transfer? hBTC amount sender recipient))
     (match memo val (print val) 0x)
-    (print { action: "transfer", data: { sender: sender, recipient: recipient, amount: amount, block-height: burn-block-height } })
+    (print { action: "transfer", data: { sender: sender, recipient: recipient, amount: amount, block-height: stacks-block-height } })
     (ok true)
   )
 )

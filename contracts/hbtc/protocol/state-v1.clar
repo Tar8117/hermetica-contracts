@@ -386,7 +386,6 @@
                   (/ (* abs-diff bps-base) old-price)
                   u0))  ;; Handle edge case of last withdraw/redeem
   )
-    (print { action: "check-max-deviation", data: { old: old-price, new: new-price, deviation: deviation, max-deviation: threshold } })
     (ok (asserts! (<= deviation threshold) ERR_DEVIATION))
   )
 )
@@ -507,8 +506,8 @@
           (print { action: "commit-reward", user: contract-caller, data: { 
             share-price: { old: init-share-price, new: (get-share-price) },
             total-assets: { old: init-total-assets, new: (get-total-assets) },
-            return: (/ (* (get reward data) bps-base pct-base) init-total-assets),
-            next-log-ts: (get-last-log-ts),
+            reward: data,
+            log-ts: (get-last-log-ts),
           } })
           true)
         true)
