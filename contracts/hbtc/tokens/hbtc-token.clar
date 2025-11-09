@@ -3,7 +3,7 @@
 ;; Defines the hBTC token according to the SIP010 Standard
 (define-fungible-token hBTC)
 
-(define-constant ERR_NOT_AUTHORIZED (err u100001))
+(define-constant ERR_NOT_AUTHORIZED (err u4))
 (define-constant token-decimals u8)
 
 ;;-------------------------------------
@@ -45,15 +45,10 @@
 (define-public (transfer (amount uint) (sender principal) (recipient principal) (memo (optional (buff 34))))
   (begin
     (asserts! (or (is-eq sender tx-sender) (is-eq sender contract-caller)) ERR_NOT_AUTHORIZED)
-
-    (match (ft-transfer? hBTC amount sender recipient)
-      response (begin
-        (print memo)
-        (print { action: "transfer", data: { sender: tx-sender, recipient: recipient, amount: amount, block-height: burn-block-height } })
-        (ok response)
-      )
-      error (err error)
-    )
+    (try! (ft-transfer? hBTC amount sender recipient))
+    (match memo val (print val) 0x)
+    (print { action: "transfer", data: { sender: sender, recipient: recipient, amount: amount, block-height: burn-block-height } })
+    (ok true)
   )
 )
 
