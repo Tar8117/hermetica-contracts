@@ -160,7 +160,7 @@
       ;; Transfer z-tokens (vault shares) to reserve
       (try! (as-contract (contract-call? vault-trait transfer received this-contract .reserve none)))
 
-      (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, shares: received } })
+      (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, min-shares: min-shares, shares: received } })
       (ok received)
     )
   )
@@ -194,7 +194,7 @@
       ;; Transfer received tokens back to reserve
       (try! (as-contract (contract-call? asset-trait transfer received this-contract .reserve none)))
       
-      (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, amount: received } })
+      (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, min-amount: min-amount, amount: received } })
       (ok received)
     )
   )
