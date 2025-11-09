@@ -515,17 +515,16 @@
           } })
           true)
         true)
-      true)
-    
-    ;; POST-CONDITION: Check share price deviation after all updates
-    (let (
-      (new-share-price (get-share-price))
-    )
-      (try! (check-max-deviation init-share-price new-share-price post-share-supply))
       
-      (print { action: "update-state", user: contract-caller, data: { operations: operations, shares: shares, share-price: { old: init-share-price, new: new-share-price } } })
-      (ok true)
-    )
+      ;; POST-CONDITION: Check share price deviation after all updates
+      (let (
+        (new-share-price (get-share-price))
+      )
+        (try! (check-max-deviation init-share-price new-share-price post-share-supply))
+        
+        (print { action: "update-state", user: contract-caller, data: { operations: operations, shares: shares, share-price: { old: init-share-price, new: new-share-price } } })
+        (ok true)
+      ))
   )
 )
 
