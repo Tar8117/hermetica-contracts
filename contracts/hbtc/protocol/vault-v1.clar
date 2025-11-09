@@ -91,7 +91,7 @@
 (define-public (deposit (assets uint) (affiliate (optional (buff 64))))
   (let (
     (state (contract-call? .state get-deposit-state))
-    (shares (/ (* assets share-base) (get share-price state)))
+    (shares (unwrap-panic (preview-deposit assets)))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
@@ -141,7 +141,7 @@
 (define-public (init-withdraw (assets uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (shares (/ (* assets share-base) (get share-price state)))
+    (shares (unwrap-panic (preview-withdraw assets)))
   )
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
@@ -158,7 +158,7 @@
 (define-public (init-redeem (shares uint) (is-express bool))
   (let (
     (state (contract-call? .state get-withdraw-state contract-caller is-express))
-    (assets (/ (* shares (get share-price state)) share-base))
+    (assets (unwrap-panic (preview-redeem shares)))
   )
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
