@@ -76,7 +76,7 @@
     (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
     (try! (contract-call? .state check-is-deposit-active))
-    (asserts! (<= (+ (get total-assets state) assets) (get deposit-cap state)) ERR_DEPOSIT_CAP_EXCEEDED)
+    (asserts! (<= (+ (get net-assets state) assets) (get deposit-cap state)) ERR_DEPOSIT_CAP_EXCEEDED)
     (asserts! (>= assets (get min-amount state)) ERR_BELOW_MIN_AMOUNT)
 
     (try! (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer assets contract-caller reserve none))
@@ -85,7 +85,7 @@
         { type: "total-assets", amount: assets, is-add: true })
       none
       (some { amount: shares, is-add: true, user: contract-caller })))
-    (print { action: "deposit", user: contract-caller, data: { assets: assets, shares: shares, affiliate: affiliate, total-assets: (get total-assets state) } })
+    (print { action: "deposit", user: contract-caller, data: { assets: assets, shares: shares, affiliate: affiliate, net-assets: (get net-assets state) } })
     (ok shares)
   )
 )
