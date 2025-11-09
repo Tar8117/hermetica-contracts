@@ -74,7 +74,7 @@
     (asserts! (> usdh-amount u0) ERR_INVALID_AMOUNT)
 
     ;; Step 1: Add sBTC directly as collateral
-    (try! (contract-call? .zest-interface zest-collateral-add market-trait sbtc-token-trait sbtc-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-collateral-add market-trait sbtc-token-trait sbtc-amount none none))
 
     ;; Step 2: Borrow USDh and stake it in Hermetica
     (try! (zest-open market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
@@ -104,7 +104,7 @@
     (try! (zest-close market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Remove sBTC collateral
-    (try! (contract-call? .zest-interface zest-collateral-remove market-trait sbtc-token-trait collateral-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-collateral-remove market-trait sbtc-token-trait collateral-amount none none))
     
     ;; Step 3: Optional - Fund claims with sBTC now in reserve
     (if (> (len claim-ids) u0)
@@ -139,10 +139,10 @@
     (asserts! (> usdh-amount u0) ERR_INVALID_AMOUNT)
     (let (
       ;; Step 1: Deposit sBTC to vault and get z-tokens
-      (z-tokens-received (try! (contract-call? .zest-interface zest-deposit vault-trait z-token-trait sbtc-token-trait sbtc-amount min-shares price-feed-1 price-feed-2))))
+      (z-tokens-received (try! (contract-call? .zest-interface zest-deposit vault-trait z-token-trait sbtc-token-trait sbtc-amount min-shares none none))))
       
       ;; Step 1b: Add z-tokens as collateral to Zest market
-      (try! (contract-call? .zest-interface zest-collateral-add market-trait z-token-trait z-tokens-received price-feed-1 price-feed-2))
+      (try! (contract-call? .zest-interface zest-collateral-add market-trait z-token-trait z-tokens-received none none))
 
       ;; Step 2: Borrow USDh and stake it in Hermetica
       (try! (zest-open market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
@@ -173,10 +173,10 @@
     (try! (zest-close market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Remove z-token collateral
-    (try! (contract-call? .zest-interface zest-collateral-remove market-trait z-token-trait collateral-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-collateral-remove market-trait z-token-trait collateral-amount none none))
     
     ;; Step 3: Redeem sBTC from vault (burn z-tokens, get actual sBTC amount)
-    (try! (contract-call? .zest-interface zest-redeem vault-trait z-token-trait sbtc-token-trait collateral-amount min-sbtc-amount price-feed-1 price-feed-2))
+    (try! (contract-call? .zest-interface zest-redeem vault-trait z-token-trait sbtc-token-trait collateral-amount min-sbtc-amount none none))
     
     ;; Step 4: Optional - Fund claims with sBTC now in reserve
     (if (> (len claim-ids) u0)
