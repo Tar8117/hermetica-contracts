@@ -25,7 +25,6 @@
 (define-public (log-reward (reward uint) (is-positive bool))
   (let (
     (state (contract-call? .state get-reward-state))
-    (total-assets (get total-assets state))
     (fees (get fees state))
     (pending-rf (get pending-rf state))
     (reserve-rate (get reserve-rate state))
