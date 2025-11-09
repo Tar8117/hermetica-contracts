@@ -20,7 +20,7 @@
 ;;-------------------------------------
 
 ;; @desc - Executes USDh borrow plus stake without guard rails
-(define-private (zest-open-helper
+(define-private (zest-open-internal
   (market-trait <zest-market>) (staking-trait <staking>) 
   (usdh-token-trait <ft>)
   (usdh-amount uint)
@@ -43,14 +43,14 @@
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> usdh-amount u0) ERR_INVALID_AMOUNT)
-    (try! (zest-open-helper market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
+    (try! (zest-open-internal market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
     (print { action: "zest-open", user: contract-caller, data: { usdh-amount: usdh-amount } })
     (ok true)
   )
 )
 
 ;; @desc - Executes sUSDh unwind plus USDh repay without guard rails and returns the USDh amount repaid
-(define-private (zest-close-helper
+(define-private (zest-close-internal
   (market-trait <zest-market>) (staking-trait <staking>) (staking-silo-trait <staking-silo>) 
   (usdh-token-trait <ft>)
   (susdh-amount uint)
@@ -74,7 +74,7 @@
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (asserts! (> susdh-amount u0) ERR_INVALID_AMOUNT)
     (let (
-      (usdh-amount (try! (zest-close-helper market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))))
+      (usdh-amount (try! (zest-close-internal market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))))
 
       (print { action: "zest-close", user: contract-caller, data: { susdh-amount: susdh-amount, usdh-amount: usdh-amount } })
       (ok true)
@@ -104,7 +104,7 @@
     (try! (contract-call? .zest-interface zest-collateral-add market-trait sbtc-token-trait sbtc-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Borrow USDh and stake it in Hermetica
-    (try! (zest-open-helper market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
+    (try! (zest-open-internal market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
 
     (print { action: "zest-open-add", user: contract-caller, data: { sbtc-amount: sbtc-amount, usdh-amount: usdh-amount } })
     (ok true)
@@ -128,7 +128,7 @@
     (asserts! (> collateral-amount u0) ERR_INVALID_AMOUNT)
 
     ;; Step 1: Unstake sUSDh and repay USDh loan
-    (try! (zest-close-helper market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
+    (try! (zest-close-internal market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Remove sBTC collateral
     (try! (contract-call? .zest-interface zest-collateral-remove market-trait sbtc-token-trait collateral-amount price-feed-1 price-feed-2))
@@ -172,7 +172,7 @@
       (try! (contract-call? .zest-interface zest-collateral-add market-trait z-token-trait z-tokens-received price-feed-1 price-feed-2))
 
       ;; Step 2: Borrow USDh and stake it in Hermetica
-      (try! (zest-open-helper market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
+      (try! (zest-open-internal market-trait staking-trait usdh-token-trait usdh-amount price-feed-1 price-feed-2))
 
       (print { action: "zest-open-add-deposit", user: contract-caller, data: { sbtc-amount: sbtc-amount, usdh-amount: usdh-amount } })
       (ok true)
@@ -197,7 +197,7 @@
     (asserts! (> collateral-amount u0) ERR_INVALID_AMOUNT)
 
     ;; Step 1: Unstake sUSDh and repay USDh loan
-    (try! (zest-close-helper market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
+    (try! (zest-close-internal market-trait staking-trait staking-silo-trait usdh-token-trait susdh-amount price-feed-1 price-feed-2))
 
     ;; Step 2: Remove z-token collateral
     (try! (contract-call? .zest-interface zest-collateral-remove market-trait z-token-trait collateral-amount price-feed-1 price-feed-2))
