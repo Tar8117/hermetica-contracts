@@ -13,7 +13,7 @@
 (define-constant ERR_TRANSFER_DISABLED (err u102003))
 (define-constant ERR_VAULT_DISABLED (err u102004))
 (define-constant ERR_DEPOSIT_DISABLED (err u102005))
-(define-constant ERR_WITHDRAW_DISABLED (err u102006))
+(define-constant ERR_REDEEM_DISABLED (err u102006))
 (define-constant ERR_TRADING_DISABLED (err u102007))
 (define-constant ERR_ABOVE_MAX (err u102008))
 (define-constant ERR_BELOW_MIN (err u102009))
@@ -34,10 +34,10 @@
   slippage: u500,                                                 ;; [500 bps] => 5.00% - max slippage for asset trades
   mgmt-fee: u55,                                                  ;; [55 bps/10000] => 0.0055% daily (~2% annualized) - max management fee
   perf-fee: u2000,                                                ;; [2000 bps] => 20.00% - max performance fee on profits
-  exit-fee: u100,                                                 ;; [100 bps] => 1.00% - max exit fee on withdraws
+  exit-fee: u100,                                                 ;; [100 bps] => 1.00% - max exit fee on redeems
   reserve-rate: u5000,                                            ;; [5000 bps] => 50.00% - max reserve fund allocation rate
-  express-fee: u200,                                              ;; [200 bps] => 2.00% - max express withdraw fee
-  cooldown: u2592000,                                             ;; [2592000 seconds] => 30 days - withdraw cooldown period
+  express-fee: u200,                                              ;; [200 bps] => 2.00% - max express redeem fee
+  cooldown: u2592000,                                             ;; [2592000 seconds] => 30 days - redeem cooldown period
   staleness-window: u300,                                         ;; [300 seconds] => 5 min - price staleness check
 })
 
@@ -67,8 +67,8 @@
 (define-data-var reserve-rate uint u500)                          ;; [500 bps] => 5.00% - reserve fund allocation rate from profits (log-reward)
 (define-data-var deposit-cap uint u0)                             ;; [8 decimals] - maximum total vault capacity
 (define-data-var min-amount uint u0)                              ;; [8 decimals] - minimum deposit amount
-(define-data-var cooldown uint u259200)                           ;; [259200 seconds] => 3 days - default withdraw cooldown period
-(define-data-var express-cooldown uint u3600)                     ;; [3600 seconds] => 1 hour - express withdraw cooldown period
+(define-data-var cooldown uint u259200)                           ;; [259200 seconds] => 3 days - default redeem cooldown period
+(define-data-var express-cooldown uint u3600)                     ;; [3600 seconds] => 1 hour - express redeem cooldown period
 (define-data-var update-window uint u82800)                       ;; [82800 seconds] => 23 hours - min time between reward updates
 (define-data-var staleness-window uint u50)                       ;; [50 seconds] => ~50 seconds - price staleness check
 
@@ -76,9 +76,9 @@
 (define-data-var vault-active bool true)                          ;; vault enabled/disabled flag
 (define-data-var transfer-active bool true)                       ;; vault asset transfers enabled/disabled flag (reserve, fee-collector)
 (define-data-var deposit-active bool true)                        ;; deposits enabled/disabled flag
-(define-data-var withdraw-active bool true)                       ;; withdraws enabled/disabled flag
+(define-data-var redeem-active bool true)                         ;; redeems enabled/disabled flag
 (define-data-var trading-active bool true)                        ;; trading enabled/disabled flag
-(define-data-var express-active bool true)                       ;; express withdrawals/redeems enabled/disabled flag
+(define-data-var express-active bool true)                        ;; express redeems enabled/disabled flag
 
 ;; Accounting Variables
 (define-data-var total-assets uint u0)                            ;; [8 decimals] - total assets in the reserve
@@ -248,8 +248,8 @@
   (var-get deposit-active)
 )
 
-(define-read-only (get-withdraw-active)
-  (var-get withdraw-active)
+(define-read-only (get-redeem-active)
+  (var-get redeem-active)
 )
 
 (define-read-only (get-trading-active)
@@ -308,8 +308,8 @@
   { share-price: (get-share-price), net-assets: (get-net-assets), deposit-cap: (get-deposit-cap), min-amount: (get-min-amount) }
 )
 
-;; @desc - Batch getter for withdraw/redeem operation - returns all data needed
-(define-read-only (get-withdraw-state (user principal) (is-express bool))
+;; @desc - Batch getter for redeem operation - returns all data needed
+(define-read-only (get-redeem-state (user principal) (is-express bool))
   { share-price: (get-share-price), exit-fee: (get-custom-exit-fee user is-express), cooldown: (get-custom-cooldown user is-express) }
 )
 
@@ -331,16 +331,16 @@
   )
 )
 
-(define-read-only (check-is-withdraw-active)
+(define-read-only (check-is-redeem-active)
   (begin
     (try! (check-is-vault-active))
-    (ok (asserts! (get-withdraw-active) ERR_WITHDRAW_DISABLED))
+    (ok (asserts! (get-redeem-active) ERR_REDEEM_DISABLED))
   )
 )
 
-(define-read-only (check-withdraw-auth (is-express bool))
+(define-read-only (check-redeem-auth (is-express bool))
   (begin
-    (try! (check-is-withdraw-active))
+    (try! (check-is-redeem-active))
     (if is-express (check-is-express-active) (ok true))
   )
 )
@@ -403,7 +403,7 @@
                   (- old-price new-price)))
     (deviation (if (> share-supply u0)
                   (/ (* abs-diff bps-base) old-price)
-                  u0))  ;; Handle edge case of last withdraw/redeem
+                  u0))  ;; Handle edge case of last redeem
   )
     (ok (asserts! (<= deviation threshold) ERR_DEVIATION))
   )
@@ -762,19 +762,19 @@
   )
 )
 
-(define-public (set-withdraw-active (active bool))
+(define-public (set-redeem-active (active bool))
   (begin
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
-    (print { action: "set-withdraw-active", user: contract-caller, data: { old: (get-withdraw-active), new: active } })
-    (ok (var-set withdraw-active active))
+    (print { action: "set-redeem-active", user: contract-caller, data: { old: (get-redeem-active), new: active } })
+    (ok (var-set redeem-active active))
   )
 )
 
-(define-public (disable-withdraw)
+(define-public (disable-redeem)
   (begin
     (try! (contract-call? .hq-hbtc check-is-guardian contract-caller))
-    (print { action: "disable-withdraw", user: contract-caller, data: { old: (get-withdraw-active), new: false } })
-    (ok (var-set withdraw-active false))
+    (print { action: "disable-redeem", user: contract-caller, data: { old: (get-redeem-active), new: false } })
+    (ok (var-set redeem-active false))
 
   )
 )
