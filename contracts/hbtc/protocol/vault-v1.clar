@@ -263,7 +263,7 @@
     (claim (try! (get-claim claim-id)))
     (shares (get shares claim))
     (is-cooled-down (>= (get-current-ts) (get ts claim)))
-    (assets (preview-redeem shares))
+    (assets (/ (* shares share-price) share-base))
     (fee (/ (* assets (get fee-bps claim)) bps-base))
   )
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
