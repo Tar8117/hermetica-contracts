@@ -120,7 +120,7 @@
   (market-trait <zest-market>) (staking-trait <staking>) (staking-silo-trait <staking-silo>) (hbtc-vault-trait <hbtc-vault>)
   (sbtc-token-trait <ft>) (usdh-token-trait <ft>)
   (susdh-amount uint) (collateral-amount uint)
-  (claim-ids (list 100 uint))
+  (claim-ids (list 1000 uint))
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
@@ -189,7 +189,7 @@
   (market-trait <zest-market>) (vault-trait <zest-vault>) (staking-trait <staking>) (staking-silo-trait <staking-silo>) (hbtc-vault-trait <hbtc-vault>)
   (sbtc-token-trait <ft>) (usdh-token-trait <ft>)
   (susdh-amount uint) (collateral-amount uint) (min-sbtc-amount uint)
-  (claim-ids (list 100 uint))
+  (claim-ids (list 1000 uint))
   (price-feed-1 (optional (buff 8192))) (price-feed-2 (optional (buff 8192))))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
