@@ -6,8 +6,8 @@
 
 (define-trait zest-market-trait
   (
-    (collateral-add (<ft> uint principal) (response bool uint))
-    (collateral-remove (<ft> uint principal) (response bool uint))
+    (collateral-add (<ft> uint principal) (response uint uint))
+    (collateral-remove (<ft> uint principal) (response uint uint))
     (borrow (<ft> uint principal) (response bool uint))
     (repay (<ft> uint principal) (response bool uint))
   )

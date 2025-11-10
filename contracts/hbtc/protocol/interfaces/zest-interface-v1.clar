@@ -30,11 +30,11 @@
     ;; Transfer tokens from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
     
-    ;; Add collateral to Zest market (position owned by this interface contract)
-    (try! (as-contract (contract-call? market-trait collateral-add asset-trait amount this-contract)))
-    
-    (print { action: "zest-collateral-add", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
-    (ok true)
+    ;; Add collateral to Zest market and capture new total amount
+    (let ((total (try! (as-contract (contract-call? market-trait collateral-add asset-trait amount this-contract)))))
+      (print { action: "zest-collateral-add", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount, total: total } })
+      (ok total)
+    )
   )
 )
 
@@ -54,14 +54,12 @@
     (try! (write-feed price-feed-1))
     (try! (write-feed price-feed-2))
     
-    ;; Remove collateral from Zest market
-    (try! (as-contract (contract-call? market-trait collateral-remove asset-trait amount this-contract)))
-    
-    ;; Transfer tokens back to reserve
-    (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
-    
-    (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
-    (ok true)
+    ;; Remove collateral from Zest market and capture remaining amount and transfer tokens back to reserve
+    (let ((remaining (try! (as-contract (contract-call? market-trait collateral-remove asset-trait amount this-contract)))))
+      (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
+      (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount, remaining: remaining } })
+      (ok remaining)
+    )
   )
 )
 
