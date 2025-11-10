@@ -25,6 +25,8 @@
 (define-constant ERR_INVALID (err u102015))
 (define-constant ERR_NO_OPERATIONS (err u102016))
 (define-constant ERR_ZERO_SUPPLY (err u102017))
+(define-constant ERR_EXPRESS_DISABLED (err u102018))
+(define-constant ERR_FEE_WINDOW (err u102019))
 
 (define-constant max {
   reward: u20,                                                    ;; [20 bps] => 0.20% - max asset reward/loss per log-reward call
@@ -46,6 +48,7 @@
 (define-constant pct-base u100)                                   ;; 10^2 = 100 (percentage base)
 (define-constant bps-base u10000)                                 ;; 10^4 = 10000 (basis points base)
 (define-constant share-base u100000000)                           ;; 10^8 = 100000000 (share price base) 
+(define-constant one-hour u3600) ;; [3600 seconds] => 1 hour - mgmt/perf
 
 ;;-------------------------------------
 ;; Variables
@@ -75,6 +78,7 @@
 (define-data-var deposit-active bool true)                        ;; deposits enabled/disabled flag
 (define-data-var redeem-active bool true)                         ;; redeems enabled/disabled flag
 (define-data-var trading-active bool true)                        ;; trading enabled/disabled flag
+(define-data-var express-active bool true)                       ;; express withdrawals/redeems enabled/disabled flag
 
 ;; Accounting Variables
 (define-data-var total-assets uint u0)                            ;; [8 decimals] - total assets in the reserve
@@ -252,6 +256,10 @@
   (var-get trading-active)
 )
 
+(define-read-only (get-express-active)
+  (var-get express-active)
+)
+
 (define-read-only (get-asset (address principal))
   (default-to 
     { active: false, ts: none, price-feed-id: 0x, token-base: u0, max-slippage: u0, is-stablecoin: false } 
@@ -328,6 +336,17 @@
     (try! (check-is-vault-active))
     (ok (asserts! (get-redeem-active) ERR_REDEEM_DISABLED))
   )
+)
+
+(define-read-only (check-withdraw-auth (is-express bool))
+  (begin
+    (try! (check-is-withdraw-active))
+    (if is-express (check-is-express-active) (ok true))
+  )
+)
+
+(define-read-only (check-is-express-active)
+  (ok (asserts! (get-express-active) ERR_EXPRESS_DISABLED))
 )
 
 (define-read-only (check-is-transfer-active)
@@ -554,7 +573,11 @@
 
 (define-public (set-fees (mgmt-fee uint) (perf-fee uint) (exit-fee uint) (express-fee uint))
   (let (
+    (current-fees (get-fees))
+    (last-ts (get-last-log-ts))
     (new-fees { mgmt-fee: mgmt-fee, perf-fee: perf-fee, exit-fee: exit-fee, express-fee: express-fee })
+    (mgmt-changed (not (is-eq mgmt-fee (get mgmt-fee current-fees))))
+    (perf-changed (not (is-eq perf-fee (get perf-fee current-fees))))
   )
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (asserts! (<= mgmt-fee (get mgmt-fee max)) ERR_ABOVE_MAX)
@@ -562,7 +585,10 @@
     (asserts! (<= exit-fee (get exit-fee max)) ERR_ABOVE_MAX)
     (asserts! (<= express-fee (get express-fee max)) ERR_ABOVE_MAX)
     (asserts! (<= exit-fee express-fee) ERR_INVALID)
-    (print { action: "set-fees", user: contract-caller, data: { old: (get-fees), new: new-fees } })
+    (if (or mgmt-changed perf-changed)
+      (asserts! (or (<= (get-current-ts) (+ last-ts one-hour)) (is-eq last-ts u0)) ERR_FEE_WINDOW)
+      true)
+    (print { action: "set-fees", user: contract-caller, data: { old: current-fees, new: new-fees } })
     (ok (var-set fees new-fees))
   )
 )

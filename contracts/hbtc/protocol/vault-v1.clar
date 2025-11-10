@@ -135,7 +135,7 @@
   )
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
-    (try! (contract-call? .state check-is-redeem-active))
+    (try! (contract-call? .state check-redeem-auth is-express))
 
     (let ((claim-id (try! (create-claim shares (get exit-fee state) (get cooldown state)))))
       (print { action: "init-redeem", user: contract-caller, data: { claim-id: claim-id, shares: shares, is-express: is-express } })
