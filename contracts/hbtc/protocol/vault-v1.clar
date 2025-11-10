@@ -138,7 +138,7 @@
     (try! (contract-call? .state check-is-redeem-active))
 
     (let ((claim-id (try! (create-claim shares (get exit-fee state) (get cooldown state)))))
-      (print { action: "init-redeem", user: contract-caller, data: { claim-id: claim-id, shares: shares, is-express: is-express } })
+      (print { action: "request-redeem", user: contract-caller, data: { claim-id: claim-id, shares: shares, is-express: is-express } })
       (ok claim-id)
     )
   )
@@ -191,44 +191,44 @@
   (let (
     (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
     (share-price (contract-call? .state get-share-price))
-    (result (try! (process-claim claim-id u0 u0 share-price is-manager)))
+    (result (try! (process-claim claim-id share-price is-manager)))
+    (assets (get assets result))
+    (shares (get shares result))
   )
     ;; Transfer assets from reserve to vault and update state
-    (try! (contract-call? .reserve transfer sbtc-token (get total-assets result) this-contract))
+    (try! (contract-call? .reserve transfer sbtc-token assets this-contract))
     (try! (contract-call? .state update-state 
       (list
-        { type: "total-assets", amount: (get total-assets result), is-add: false })
+        { type: "total-assets", amount: assets, is-add: false })
       none
-      (some { amount: (get total-shares result), is-add: false, user: this-contract })))
-    (print { action: "fund-claim", user: contract-caller, data: { claim-id: claim-id, shares: (get total-shares result), assets: (get total-assets result), share-price: share-price } })
-    (ok (get total-assets result))
+      (some { amount: shares, is-add: false, user: this-contract })))
+    (print { action: "fund-claim", user: contract-caller, data: { claim-id: claim-id, shares: shares, assets: assets, share-price: share-price } })
+    (ok assets)
   )
 )
 
 ;; @desc - Optimized batch funding of claims
 (define-public (fund-claim-many (claim-ids (list 1000 uint)))
-  (begin
+  (let (
+    (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
+    (share-price (contract-call? .state get-share-price))
+    (initial-accum { total-shares: u0, total-assets: u0, share-price: share-price, is-manager: is-manager })
+  )
     (asserts! (> (len claim-ids) u0) ERR_EMPTY_LIST)
-    (let (
-      (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
-      (share-price (contract-call? .state get-share-price))
-      (initial-accum { total-shares: u0, total-assets: u0, share-price: share-price, is-manager: is-manager })
-    )
-      (match (fold fund-claim-iter claim-ids (ok initial-accum))
-        accum
-          (begin
-            ;; Transfer accumulated assets from reserve to vault in a single batch and update state
-            (try! (contract-call? .reserve transfer sbtc-token (get total-assets accum) this-contract))
-            (try! (contract-call? .state update-state 
-              (list
-                { type: "total-assets", amount: (get total-assets accum), is-add: false })
-              none
-              (some { amount: (get total-shares accum), is-add: false, user: this-contract })))
-            (print { action: "fund-claim-many", user: contract-caller, data: { total-shares: (get total-shares accum), total-assets: (get total-assets accum) } })
-            (ok true)
-          )
-        error (err error)
-      )
+    (match (fold fund-claim-iter claim-ids (ok initial-accum))
+      accum
+        (begin
+          ;; Transfer accumulated assets from reserve to vault in a single batch and update state
+          (try! (contract-call? .reserve transfer sbtc-token (get total-assets accum) this-contract))
+          (try! (contract-call? .state update-state
+            (list
+              { type: "total-assets", amount: (get total-assets accum), is-add: false })
+            none
+            (some { amount: (get total-shares accum), is-add: false, user: this-contract })))
+          (print { action: "fund-claim-many", user: contract-caller, data: { total-shares: (get total-shares accum), total-assets: (get total-assets accum) } })
+          (ok true)
+        )
+      error (err error)
     )
   )
 )
@@ -240,14 +240,12 @@
       (let (
         (result (try! (process-claim 
           claim-id 
-          (get total-shares accum) 
-          (get total-assets accum)
           (get share-price accum)
           (get is-manager accum))))
       )
         (ok { 
-          total-shares: (get total-shares result), 
-          total-assets: (get total-assets result),
+          total-shares: (+ (get total-shares accum) (get shares result)),
+          total-assets: (+ (get total-assets accum) (get assets result)),
           share-price: (get share-price accum),
           is-manager: (get is-manager accum)
         })
@@ -259,23 +257,21 @@
 ;; @desc - Processes a single claim for funding (validates, calculates assets/fee, updates claim map)
 (define-private (process-claim 
   (claim-id uint) 
-  (shares-accum uint) 
-  (assets-accum uint)
   (share-price uint)
   (is-manager bool))
   (let (
     (claim (try! (get-claim claim-id)))
     (shares (get shares claim))
     (is-cooled-down (>= (get-current-ts) (get ts claim)))
-    (assets (convert-to-assets shares))
+    (assets (preview-redeem shares))
     (fee (/ (* assets (get fee-bps claim)) bps-base))
   )
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
-    (if is-manager true (asserts! is-cooled-down ERR_NOT_COOLED_DOWN)) ;; if the caller is a manager, skip the cooldown check
-    
+    (asserts! (or is-manager is-cooled-down) ERR_NOT_COOLED_DOWN)
+
     ;; Update claim with calculated assets and fee, mark as funded
     (map-set claims { claim-id: claim-id } (merge claim { assets: assets, fee: fee, is-funded: true }))
     (print { action: "process-claim", user: contract-caller, data: { claim-id: claim-id, shares: shares, assets: assets, fee: fee, share-price: share-price, claimed-by-manager: is-manager } })
-    (ok { total-shares: (+ shares-accum shares), total-assets: (+ assets-accum assets) })
+    (ok { shares: shares, assets: assets })
   )
 )
