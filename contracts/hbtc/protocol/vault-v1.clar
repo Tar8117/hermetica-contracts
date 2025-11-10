@@ -160,7 +160,7 @@
   )
 )
 
-;; @desc - internal function to perform the withdraw operation
+;; @desc - internal function to perform the redeem operation
 (define-private (redeem-internal (claim-id uint))
   (let (
     (current-claim (try! (get-claim claim-id)))

@@ -78,7 +78,7 @@
 (define-data-var deposit-active bool true)                        ;; deposits enabled/disabled flag
 (define-data-var redeem-active bool true)                         ;; redeems enabled/disabled flag
 (define-data-var trading-active bool true)                        ;; trading enabled/disabled flag
-(define-data-var express-active bool true)                       ;; express withdrawals/redeems enabled/disabled flag
+(define-data-var express-active bool true)                        ;; express redeems enabled/disabled flag
 
 ;; Accounting Variables
 (define-data-var total-assets uint u0)                            ;; [8 decimals] - total assets in the reserve
@@ -338,9 +338,9 @@
   )
 )
 
-(define-read-only (check-withdraw-auth (is-express bool))
+(define-read-only (check-redeem-auth (is-express bool))
   (begin
-    (try! (check-is-withdraw-active))
+    (try! (check-is-redeem-active))
     (if is-express (check-is-express-active) (ok true))
   )
 )
