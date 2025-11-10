@@ -25,7 +25,8 @@
 (define-constant ERR_INVALID (err u102015))
 (define-constant ERR_NO_OPERATIONS (err u102016))
 (define-constant ERR_ZERO_SUPPLY (err u102017))
-(define-constant ERR_FEE_WINDOW (err u102018))
+(define-constant ERR_EXPRESS_DISABLED (err u102018))
+(define-constant ERR_FEE_WINDOW (err u102019))
 
 (define-constant max {
   reward: u20,                                                    ;; [20 bps] => 0.20% - max asset reward/loss per log-reward call
@@ -77,6 +78,7 @@
 (define-data-var deposit-active bool true)                        ;; deposits enabled/disabled flag
 (define-data-var withdraw-active bool true)                       ;; withdraws enabled/disabled flag
 (define-data-var trading-active bool true)                        ;; trading enabled/disabled flag
+(define-data-var express-active bool true)                       ;; express withdrawals/redeems enabled/disabled flag
 
 ;; Accounting Variables
 (define-data-var total-assets uint u0)                            ;; [8 decimals] - total assets in the reserve
@@ -254,6 +256,10 @@
   (var-get trading-active)
 )
 
+(define-read-only (get-express-active)
+  (var-get express-active)
+)
+
 (define-read-only (get-asset (address principal))
   (default-to 
     { active: false, ts: none, price-feed-id: 0x, token-base: u0, max-slippage: u0, is-stablecoin: false } 
@@ -330,6 +336,17 @@
     (try! (check-is-vault-active))
     (ok (asserts! (get-withdraw-active) ERR_WITHDRAW_DISABLED))
   )
+)
+
+(define-read-only (check-withdraw-auth (is-express bool))
+  (begin
+    (try! (check-is-withdraw-active))
+    (if is-express (check-is-express-active) (ok true))
+  )
+)
+
+(define-read-only (check-is-express-active)
+  (ok (asserts! (get-express-active) ERR_EXPRESS_DISABLED))
 )
 
 (define-read-only (check-is-transfer-active)
