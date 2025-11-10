@@ -29,6 +29,9 @@ contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.wormhole-core-v4'
 [[project.requirements]]
 contract_id = 'SP1CGXWEAMG6P6FT04W66NVGJ7PQWMDAC19R7PJ0Y.pyth-traits-v2'
 
+[[project.requirements]]
+contract_id = 'SP26NGV9AFZBX7XBDBS2C7EC7FCPSAV9PKREQNMVS.borrower-v1' # granite borrower (pyth v4)
+
 # protocol
 
 [contracts.minting-state]
@@ -204,6 +207,11 @@ path = 'contracts/hbtc/protocol/interfaces/zest-interface-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
+[contracts.granite-interface]
+path = 'contracts/hbtc/protocol/interfaces/granite-interface-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
 # hbtc tokens
 
 [contracts.hbtc-token]
@@ -225,6 +233,11 @@ epoch = 3.2
 
 [contracts.zest-vault-trait-v1]
 path = 'contracts/hbtc/traits/zest-vault-trait-v1.clar'
+clarity_version = 3
+epoch = 3.2
+
+[contracts.granite-borrower-trait-v1]
+path = 'contracts/hbtc/traits/granite-borrower-trait-v1.clar'
 clarity_version = 3
 epoch = 3.2
 
