@@ -16,12 +16,12 @@
 (define-constant ERR_NOT_MANAGER (err u101007))
 (define-constant ERR_NOT_FEE_SETTER (err u101008))
 (define-constant ERR_NOT_PROTOCOL (err u101009))
-(define-constant ERR_PROTOCOL_DISABLED (err u101011))
-(define-constant ERR_NOT_STANDARD (err u101013))
-(define-constant ERR_BELOW_MIN (err u101014))
-(define-constant ERR_ACTIVATION (err u101015))
-(define-constant ERR_NO_ENTRY (err u101016))
-(define-constant ERR_DUPLICATE (err u101017))
+(define-constant ERR_PROTOCOL_DISABLED (err u101010))
+(define-constant ERR_NOT_STANDARD (err u101011))
+(define-constant ERR_BELOW_MIN (err u101012))
+(define-constant ERR_ACTIVATION (err u101013))
+(define-constant ERR_NO_ENTRY (err u101014))
+(define-constant ERR_DUPLICATE (err u101015))
 
 (define-constant min {
   activation-delay: u86400,                                       ;; 1 day in seconds
