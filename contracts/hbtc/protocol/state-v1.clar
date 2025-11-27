@@ -494,8 +494,7 @@
     ;; Execute ALL operations before checking
     (try! (fold execute-update operations (ok true)))
     
-    (let (
-      (post-share-supply
+    (let ((post-share-supply
         (match shares
           data (try! (update-shares (get amount data) (get is-add data) (get user data) current-share-supply))
           current-share-supply))
