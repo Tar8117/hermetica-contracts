@@ -9,13 +9,12 @@
 ;;-------------------------------------
 
 (define-constant ERR_DEPOSIT_CAP_EXCEEDED (err u103001))
-(define-constant ERR_INVALID_AMOUNT (err u103002))
-(define-constant ERR_BELOW_MIN_AMOUNT (err u103003))
-(define-constant ERR_NO_CLAIM_FOR_ID (err u103004))
-(define-constant ERR_NOT_COOLED_DOWN (err u103005))
-(define-constant ERR_ALREADY_FUNDED (err u103006))
-(define-constant ERR_NOT_FUNDED (err u103007))
-(define-constant ERR_EMPTY_LIST (err u103008))
+(define-constant ERR_BELOW_MIN (err u103002))
+(define-constant ERR_NO_CLAIM_FOR_ID (err u103003))
+(define-constant ERR_NOT_COOLED_DOWN (err u103004))
+(define-constant ERR_ALREADY_FUNDED (err u103005))
+(define-constant ERR_NOT_FUNDED (err u103006))
+(define-constant ERR_EMPTY_LIST (err u103007))
 
 (define-constant share-base u100000000)                         ;; 10^8 = 100000000 (share price base)
 (define-constant bps-base u10000)                               ;; 10^4 = 10000 (basis points base)
@@ -86,11 +85,10 @@
     (state (contract-call? .state get-deposit-state))
     (shares (preview-deposit assets))
   )
-    (asserts! (> assets u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
     (try! (contract-call? .state check-is-deposit-active))
     (asserts! (<= (+ (get net-assets state) assets) (get deposit-cap state)) ERR_DEPOSIT_CAP_EXCEEDED)
-    (asserts! (>= assets (get min-amount state)) ERR_BELOW_MIN_AMOUNT)
+    (asserts! (>= assets (get min-deposit state)) ERR_BELOW_MIN)
 
     (try! (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer assets contract-caller reserve none))
     (try! (contract-call? .state update-state
@@ -133,7 +131,7 @@
   (let (
     (state (contract-call? .state get-redeem-state contract-caller is-express))
   )
-    (asserts! (> shares u0) ERR_INVALID_AMOUNT)
+    (asserts! (>= shares (get min-redeem state)) ERR_BELOW_MIN)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
     (try! (contract-call? .state check-redeem-auth is-express))
 
