@@ -10,7 +10,7 @@
 
 (define-constant ERR_DEPOSIT_CAP_EXCEEDED (err u103001))
 (define-constant ERR_INVALID_AMOUNT (err u103002))
-(define-constant ERR_BELOW_MIN_AMOUNT (err u103003))
+(define-constant ERR_BELOW_MIN (err u103003))
 (define-constant ERR_NO_CLAIM_FOR_ID (err u103004))
 (define-constant ERR_NOT_COOLED_DOWN (err u103005))
 (define-constant ERR_ALREADY_FUNDED (err u103006))
@@ -90,7 +90,7 @@
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
     (try! (contract-call? .state check-is-deposit-active))
     (asserts! (<= (+ (get net-assets state) assets) (get deposit-cap state)) ERR_DEPOSIT_CAP_EXCEEDED)
-    (asserts! (>= assets (get min-amount state)) ERR_BELOW_MIN_AMOUNT)
+    (asserts! (>= assets (get min-amount state)) ERR_BELOW_MIN)
 
     (try! (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer assets contract-caller reserve none))
     (try! (contract-call? .state update-state
@@ -266,6 +266,7 @@
     (assets (/ (* shares share-price) share-base))
     (fee (/ (* assets (get fee-bps claim)) bps-base))
   )
+    (asserts! (> assets u0) ERR_BELOW_MIN)
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
     (asserts! (or is-manager is-cooled-down) ERR_NOT_COOLED_DOWN)
 
