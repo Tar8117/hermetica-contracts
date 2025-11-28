@@ -788,7 +788,8 @@
   (let (
     (token-address (contract-of token))
     (token-base (pow u10 (unwrap-panic (contract-call? token get-decimals))))
-    (new-entry { active: false, ts: (some (get-current-ts)), price-feed-id: price-feed-id, token-base: token-base, max-slippage: max-slippage, is-stablecoin: is-stablecoin })
+    (activation-ts (+ (get-current-ts) (contract-call? .hq-hbtc get-activation-delay)))
+    (new-entry { active: false, ts: (some activation-ts), price-feed-id: price-feed-id, token-base: token-base, max-slippage: max-slippage, is-stablecoin: is-stablecoin })
   )
     (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (asserts! (<= max-slippage (get slippage max) ) ERR_ABOVE_MAX)
@@ -833,7 +834,8 @@
 
 (define-public (request-new-contract (address principal))
   (let (
-    (new-entry { active: false, ts: (some (get-current-ts)) })
+    (activation-ts (+ (get-current-ts) (contract-call? .hq-hbtc get-activation-delay)))
+    (new-entry { active: false, ts: (some activation-ts) })
   )
     (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
     (try! (contract-call? .hq-hbtc check-is-standard address))
