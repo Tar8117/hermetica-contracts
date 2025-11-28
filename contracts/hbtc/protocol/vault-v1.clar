@@ -191,7 +191,7 @@
   (let (
     (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
     (share-price (contract-call? .state get-share-price))
-    (result (try! (process-claim claim-id share-price is-manager)))
+    (result (try! (process-claim claim-id share-price (some is-manager))))
     (assets (get assets result))
     (shares (get shares result))
   )
@@ -210,11 +210,11 @@
 ;; @desc - Optimized batch funding of claims
 (define-public (fund-claim-many (claim-ids (list 1000 uint)))
   (let (
-    (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
     (share-price (contract-call? .state get-share-price))
-    (initial-accum { total-shares: u0, total-assets: u0, share-price: share-price, is-manager: is-manager })
+    (initial-accum { total-shares: u0, total-assets: u0, share-price: share-price })
   )
     (asserts! (> (len claim-ids) u0) ERR_EMPTY_LIST)
+    (try! (contract-call? .hq-hbtc check-is-manager contract-caller))
     (match (fold fund-claim-iter claim-ids (ok initial-accum))
       accum
         (begin
@@ -234,20 +234,19 @@
 )
 
 ;; @desc - Iterator function for fund-claim-many that processes each claim and accumulates totals
-(define-private (fund-claim-iter (claim-id uint) (prev (response { total-shares: uint, total-assets: uint, share-price: uint, is-manager: bool } uint)))
+(define-private (fund-claim-iter (claim-id uint) (prev (response { total-shares: uint, total-assets: uint, share-price: uint } uint)))
   (match prev
     accum
       (let (
         (result (try! (process-claim 
           claim-id 
           (get share-price accum)
-          (get is-manager accum))))
+          none)))
       )
-        (ok { 
+        (ok {
           total-shares: (+ (get total-shares accum) (get shares result)),
           total-assets: (+ (get total-assets accum) (get assets result)),
-          share-price: (get share-price accum),
-          is-manager: (get is-manager accum)
+          share-price: (get share-price accum)
         })
       )
     error (err error)
@@ -258,7 +257,7 @@
 (define-private (process-claim 
   (claim-id uint) 
   (share-price uint)
-  (is-manager bool))
+  (maybe-manager (optional bool)))
   (let (
     (claim (try! (get-claim claim-id)))
     (shares (get shares claim))
@@ -267,11 +266,14 @@
     (fee (/ (* assets (get fee-bps claim)) bps-base))
   )
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
-    (asserts! (or is-manager is-cooled-down) ERR_NOT_COOLED_DOWN)
+    (match maybe-manager
+      is-manager (asserts! (or is-manager is-cooled-down) ERR_NOT_COOLED_DOWN)
+      true
+    )
 
     ;; Update claim with calculated assets and fee, mark as funded
     (map-set claims { claim-id: claim-id } (merge claim { assets: assets, fee: fee, is-funded: true }))
-    (print { action: "process-claim", user: contract-caller, data: { claim-id: claim-id, shares: shares, assets: assets, fee: fee, share-price: share-price, claimed-by-manager: is-manager } })
+    (print { action: "process-claim", user: contract-caller, data: { claim-id: claim-id, shares: shares, assets: assets, fee: fee, share-price: share-price, manager: maybe-manager } })
     (ok { shares: shares, assets: assets })
   )
 )
