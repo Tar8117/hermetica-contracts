@@ -136,7 +136,7 @@
     (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     
-    ;; Transfer tokens from reserve to this interface
+    ;; Transfer asset from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
     
     ;; Deposit to Zest vault (z-tokens minted directly to reserve)
