@@ -48,7 +48,7 @@
 
     (if is-profit
       ;; Handle profit and zero scenario -> token price increases
-      (try! (handle-profit reward is-positive total-rf pending-rf perf-fee mgmt-fee reserve-rate))
+      (try! (handle-profit reward total-rf pending-rf perf-fee mgmt-fee reserve-rate))
       
       ;; Handle loss scenarios
       (if (<= req-rf total-rf)
@@ -98,7 +98,7 @@
 
 ;; @desc - Handle profit scenario
 (define-private (handle-profit 
-  (reward uint) (is-positive bool)
+  (reward uint)
   (total-rf uint) (pending-rf uint)
   (perf-fee uint) (mgmt-fee uint)
   (reserve-rate uint))
