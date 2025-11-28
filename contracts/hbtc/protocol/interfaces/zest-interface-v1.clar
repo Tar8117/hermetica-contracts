@@ -139,13 +139,10 @@
     ;; Transfer tokens from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
     
-    ;; Deposit to Zest vault (z-tokens minted to this interface contract)
+    ;; Deposit to Zest vault (z-tokens minted directly to reserve)
     (let (
-      (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares this-contract))))
+      (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares reserve))))
     )
-      ;; Transfer z-tokens (vault shares) to reserve
-      (try! (as-contract (contract-call? vault-trait transfer received this-contract reserve none)))
-
       (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, min-shares: min-shares, shares: received } })
       (ok received)
     )
@@ -169,11 +166,8 @@
     ;; Get actual amount received
     (let (
       ;; Redeem from Zest vault (burns vault shares (z-tokens), receives underlying tokens)
-      (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount this-contract))))
+      (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount reserve))))
     )
-      ;; Transfer received tokens back to reserve
-      (try! (as-contract (contract-call? asset-trait transfer received this-contract reserve none)))
-      
       (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, min-amount: min-amount, amount: received } })
       (ok received)
     )
