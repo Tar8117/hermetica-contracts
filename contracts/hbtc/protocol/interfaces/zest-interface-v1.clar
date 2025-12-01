@@ -31,7 +31,7 @@
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
     
     ;; Add collateral to Zest market and capture new total amount
-    (let ((total (try! (as-contract (contract-call? market-trait collateral-add asset-trait amount this-contract)))))
+    (let ((total (try! (as-contract (contract-call? market-trait collateral-add asset-trait amount)))))
       (print { action: "zest-collateral-add", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount, total: total } })
       (ok total)
     )
@@ -55,7 +55,7 @@
     (try! (write-feed price-feed-2))
     
     ;; Remove collateral from Zest market and capture remaining amount and transfer tokens back to reserve
-    (let ((remaining (try! (as-contract (contract-call? market-trait collateral-remove asset-trait amount this-contract)))))
+    (let ((remaining (try! (as-contract (contract-call? market-trait collateral-remove asset-trait amount (some this-contract))))))
       (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
       (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount, remaining: remaining } })
       (ok remaining)
@@ -84,7 +84,7 @@
     (try! (write-feed price-feed-2))
     
     ;; Borrow from Zest market (debt recorded under this interface contract)
-    (try! (as-contract (contract-call? market-trait borrow asset-trait amount this-contract)))
+    (try! (as-contract (contract-call? market-trait borrow asset-trait amount (some this-contract))))
     
     ;; Transfer borrowed tokens to reserve
     (try! (as-contract (contract-call? asset-trait transfer amount this-contract reserve none)))
@@ -113,11 +113,10 @@
     ;; Transfer repayment from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
     
-    ;; Repay to Zest market
-    (try! (as-contract (contract-call? market-trait repay asset-trait amount this-contract)))
-    
-    (print { action: "zest-repay", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount } })
-    (ok true)
+    (let ((repaid-amount (try! (as-contract (contract-call? market-trait repay asset-trait amount (some this-contract))))))
+      (print { action: "zest-repay", user: contract-caller, data: { market: market-trait, asset: asset-trait, amount: amount, repaid-amount: repaid-amount } })
+      (ok repaid-amount)
+    )
   )
 )
 
