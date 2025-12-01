@@ -169,6 +169,7 @@
   )
     (asserts! (>= (get-current-ts) (get ts current-claim)) ERR_NOT_COOLED_DOWN)
     (asserts! (get is-funded current-claim) ERR_NOT_FUNDED)
+    (try! (contract-call? .blacklist check-is-not-soft user))
     (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer assets-net this-contract user none)))
     (if (> fee u0)
       (try! (as-contract (contract-call? 'SM3VDXK3WZZSA84XXFKAFAF15NNZX32CTSG82JFQ4.sbtc-token transfer fee this-contract fee-collector none)))
