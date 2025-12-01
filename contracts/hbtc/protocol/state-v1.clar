@@ -66,8 +66,8 @@
 (define-data-var max-deviation uint u5)                           ;; [5 bps] => 0.05% - max share price deviation per update
 (define-data-var reserve-rate uint u500)                          ;; [500 bps] => 5.00% - reserve fund allocation rate from profits (log-reward)
 (define-data-var deposit-cap uint u0)                             ;; [8 decimals] - maximum total vault capacity
-(define-data-var min-deposit uint u0)                             ;; [8 decimals] - minimum deposit amount
-(define-data-var min-redeem uint u0)                              ;; [8 decimals] - minimum redeem amount
+(define-data-var min-deposit uint u100)                           ;; [8 decimals] - minimum deposit amount
+(define-data-var min-redeem uint u100)                            ;; [8 decimals] - minimum redeem amount
 (define-data-var cooldown uint u259200)                           ;; [259200 seconds] => 3 days - default redeem cooldown period
 (define-data-var express-cooldown uint u3600)                     ;; [3600 seconds] => 1 hour - express redeem cooldown period
 (define-data-var update-window uint u82800)                       ;; [82800 seconds] => 23 hours - min time between reward updates
