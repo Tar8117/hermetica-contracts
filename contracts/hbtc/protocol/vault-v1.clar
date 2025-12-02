@@ -264,6 +264,7 @@
     (assets (/ (* shares share-price) share-base))
     (fee (/ (* assets (get fee-bps claim)) bps-base))
   )
+    (asserts! (> assets u0) ERR_BELOW_MIN)
     (asserts! (not (get is-funded claim)) ERR_ALREADY_FUNDED)
     (match maybe-manager
       is-manager (asserts! (or is-manager is-cooled-down) ERR_NOT_COOLED_DOWN)
