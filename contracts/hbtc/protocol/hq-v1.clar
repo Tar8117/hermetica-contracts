@@ -16,14 +16,12 @@
 (define-constant ERR_NOT_MANAGER (err u101007))
 (define-constant ERR_NOT_FEE_SETTER (err u101008))
 (define-constant ERR_NOT_PROTOCOL (err u101009))
-(define-constant ERR_NOT_VAULT (err u101010))
-(define-constant ERR_PROTOCOL_DISABLED (err u101011))
-(define-constant ERR_MINTING_DISABLED (err u101012))
-(define-constant ERR_NOT_STANDARD (err u101013))
-(define-constant ERR_BELOW_MIN (err u101014))
-(define-constant ERR_ACTIVATION (err u101015))
-(define-constant ERR_NO_ENTRY (err u101016))
-(define-constant ERR_DUPLICATE (err u101017))
+(define-constant ERR_PROTOCOL_DISABLED (err u101010))
+(define-constant ERR_NOT_STANDARD (err u101011))
+(define-constant ERR_BELOW_MIN (err u101012))
+(define-constant ERR_ACTIVATION (err u101013))
+(define-constant ERR_NO_ENTRY (err u101014))
+(define-constant ERR_DUPLICATE (err u101015))
 
 (define-constant min {
   activation-delay: u86400,                                       ;; 1 day in seconds
@@ -44,7 +42,7 @@
   }
   {
     address: tx-sender,
-    ts: (get-current-ts)
+    ts: (+ (get-current-ts) (get-activation-delay))
   }
 )
 
@@ -156,7 +154,7 @@
 ;;-------------------------------------
 
 (define-read-only (check-activation-delay (ts uint))
-  (ok (asserts! (>= (get-current-ts) (+ ts (get-activation-delay))) ERR_ACTIVATION))
+  (ok (asserts! (>= (get-current-ts) ts) ERR_ACTIVATION))
 )
 
 (define-read-only (check-is-standard (address principal))
@@ -237,7 +235,8 @@
 
 (define-public (request-new-owner (address principal))
   (let (
-    (new-entry { address: address, ts: (get-current-ts) })
+    (activation-ts (+ (get-current-ts) (get-activation-delay)))
+    (new-entry { address: address, ts: activation-ts })
   )
     (try! (check-is-owner contract-caller))
     (try! (check-is-standard address))
@@ -263,7 +262,8 @@
 
 (define-public (request-new-admin (address principal))
   (let (
-    (new-entry { active: false, ts: (some (get-current-ts)) })
+    (activation-ts (+ (get-current-ts) (get-activation-delay)))
+    (new-entry { active: false, ts: (some activation-ts) })
   )
     (try! (check-is-owner contract-caller))
     (try! (check-is-standard address))
@@ -312,7 +312,8 @@
 
 (define-public (request-new-protocol (address principal))
   (let (
-    (new-entry { active: false, ts: (some (get-current-ts)) })
+    (activation-ts (+ (get-current-ts) (get-activation-delay)))
+    (new-entry { active: false, ts: (some activation-ts) })
   )
     (try! (check-is-owner contract-caller))
     (try! (check-is-standard address))

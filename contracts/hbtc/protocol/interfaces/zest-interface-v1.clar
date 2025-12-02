@@ -136,16 +136,13 @@
     (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     
-    ;; Transfer tokens from reserve to this interface
+    ;; Transfer asset from reserve to this interface
     (try! (contract-call? .reserve transfer asset-trait amount this-contract))
     
-    ;; Deposit to Zest vault (z-tokens minted to this interface contract)
+    ;; Deposit to Zest vault (z-tokens minted directly to reserve)
     (let (
-      (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares this-contract))))
+      (received (try! (as-contract (contract-call? vault-trait deposit amount min-shares reserve))))
     )
-      ;; Transfer z-tokens (vault shares) to reserve
-      (try! (as-contract (contract-call? vault-trait transfer received this-contract reserve none)))
-
       (print { action: "zest-deposit", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, amount: amount, min-shares: min-shares, shares: received } })
       (ok received)
     )
@@ -155,26 +152,21 @@
 ;; @desc - Redeems vault shares from Zest v2 vault
 (define-public (zest-redeem
   (vault-trait <zest-vault>)
-  (asset-trait <ft>)
   (shares uint)
   (min-amount uint))
   (begin
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
-    (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none (some (contract-of asset-trait)) none))
+    (try! (contract-call? .state check-trading-auth (contract-of vault-trait) none none none))
     (asserts! (> shares u0) ERR_INVALID_AMOUNT)
-    
+
     ;; Transfer z-tokens from reserve to this interface
     (try! (contract-call? .reserve transfer vault-trait shares this-contract))
 
-    ;; Get actual amount received
     (let (
       ;; Redeem from Zest vault (burns vault shares (z-tokens), receives underlying tokens)
-      (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount this-contract))))
+      (received (try! (as-contract (contract-call? vault-trait redeem shares min-amount reserve))))
     )
-      ;; Transfer received tokens back to reserve
-      (try! (as-contract (contract-call? asset-trait transfer received this-contract reserve none)))
-      
-      (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, asset: asset-trait, shares: shares, min-amount: min-amount, amount: received } })
+      (print { action: "zest-redeem", user: contract-caller, data: { vault: vault-trait, shares: shares, min-amount: min-amount, amount: received } })
       (ok received)
     )
   )
