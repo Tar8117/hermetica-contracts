@@ -34,7 +34,7 @@
     
     ;; Add collateral to Zest market (position owned by this interface contract)
     (let ((total (try! (as-contract? ((with-all-assets-unsafe)) (try! (contract-call? market collateral-add asset amount none))))))
-      (print { action: "zest-collateral-add", user: contract-caller, data: { market: market, asset: asset, amount: amount, total: total } })
+      (print { action: "zest-collateral-add", user: contract-caller, data: { market: market, collateral: { token: asset, amount: amount, new-total: total } } })
       (ok total)
     )
   )
@@ -59,7 +59,7 @@
     ;; Remove collateral from Zest market and capture remaining amount and transfer tokens back to reserve
     (let ((remaining (try! (as-contract? ((with-all-assets-unsafe)) (try! (contract-call? market collateral-remove asset amount (some current-contract) none))))))
       (try! (contract-call? asset transfer amount current-contract reserve none))
-      (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market, asset: asset, amount: amount, remaining: remaining } })
+      (print { action: "zest-collateral-remove", user: contract-caller, data: { market: market, collateral: { token: asset, amount: amount, remaining: remaining } } })
       (ok remaining)
     )
   )
@@ -91,7 +91,7 @@
     ;; Transfer borrowed tokens to reserve
     (try! (contract-call? asset transfer amount current-contract reserve none))
     
-    (print { action: "zest-borrow", user: contract-caller, data: { market: market, asset: asset, amount: amount } })
+    (print { action: "zest-borrow", user: contract-caller, data: { market: market, asset: { token: asset, amount: amount } } })
     (ok true)
   )
 )
@@ -116,7 +116,7 @@
     (try! (contract-call? .reserve transfer asset amount current-contract))
     
     (let ((repaid-amount (try! (as-contract? ((with-all-assets-unsafe)) (try! (contract-call? market repay asset amount (some current-contract)))))))
-      (print { action: "zest-repay", user: contract-caller, data: { market: market, asset: asset, amount: amount, repaid-amount: repaid-amount } })
+      (print { action: "zest-repay", user: contract-caller, data: { market: market, asset: { token: asset, amount: amount, actual-amount: repaid-amount } } })
       (ok repaid-amount)
     )
   )
@@ -144,7 +144,7 @@
     (let (
       (received (try! (as-contract? ((with-all-assets-unsafe)) (try! (contract-call? vault deposit amount min-shares reserve)))))
     )
-      (print { action: "zest-deposit", user: contract-caller, data: { vault: vault, asset: asset, amount: amount, min-shares: min-shares, shares: received } })
+      (print { action: "zest-deposit", user: contract-caller, data: { vault: vault, asset: { token: asset, amount: amount }, shares: { min-shares: min-shares, received: received } } })
       (ok received)
     )
   )
@@ -184,7 +184,7 @@
     (try! (contract-call? .state check-is-asset (contract-of asset)))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     (try! (contract-call? asset transfer amount current-contract reserve none))
-    (print { action: "sweep", user: contract-caller, data: { asset: asset, amount: amount, sender: current-contract, recipient: reserve } })
+    (print { action: "sweep", user: contract-caller, data: { sender: current-contract, recipient: reserve, asset: { token: asset, amount: amount } } })
     (ok amount)
   )
 )
