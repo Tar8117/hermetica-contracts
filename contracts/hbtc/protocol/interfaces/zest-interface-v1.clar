@@ -33,7 +33,9 @@
     (try! (contract-call? .reserve transfer asset amount current-contract))
     
     ;; Add collateral to Zest market (position owned by this interface contract)
-    (let ((total (try! (as-contract? ((with-ft (contract-of asset) "*" amount)) (try! (contract-call? market collateral-add asset amount none))))))
+    (let ((total (try! (as-contract? ((with-ft (contract-of asset) "*" amount) (with-stx amount)) 
+      (try! (contract-call? market collateral-add asset amount none))
+    ))))
       (print { action: "zest-collateral-add", user: contract-caller, data: { market: market, collateral: { token: asset, amount: amount, new-total: total } } })
       (ok total)
     )
@@ -145,7 +147,9 @@
     
     ;; Deposit to Zest vault (z-tokens minted directly to reserve)
     (let (
-      (received (try! (as-contract? ((with-ft (contract-of asset) "*" amount)) (try! (contract-call? vault deposit amount min-shares reserve)))))
+      (received (try! (as-contract? ((with-ft (contract-of asset) "*" amount) (with-stx amount)) 
+        (try! (contract-call? vault deposit amount min-shares reserve))
+      )))
     )
       (print { action: "zest-deposit", user: contract-caller, data: { vault: vault, asset: { token: asset, amount: amount }, shares: { min-shares: min-shares, received: received } } })
       (ok received)
@@ -168,7 +172,9 @@
 
     (let (
       ;; Redeem from Zest vault (burns vault shares (z-tokens), receives underlying tokens)
-      (received (try! (as-contract? ((with-ft (contract-of vault) "*" shares)) (try! (contract-call? vault redeem shares min-amount reserve)))))
+      (received (try! (as-contract? ((with-ft (contract-of vault) "*" shares) (with-stx shares)) 
+        (try! (contract-call? vault redeem shares min-amount reserve))
+      )))
     )
       (print { action: "zest-redeem", user: contract-caller, data: { vault: vault, shares: shares, collateral: { min-amount: min-amount, received: received } } })
       (ok received)
@@ -242,7 +248,10 @@
     (try! (contract-call? .hq-hbtc check-is-trader contract-caller))
     (try! (contract-call? .state check-is-asset (contract-of asset)))
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
-    (try! (contract-call? asset transfer amount current-contract reserve none))
+    (try! (as-contract? 
+      ((with-ft (contract-of asset) "*" amount) (with-stx amount)) 
+      (try! (contract-call? asset transfer amount current-contract reserve none))
+    ))
     (print { action: "sweep", user: contract-caller, data: { sender: current-contract, recipient: reserve, asset: { token: asset, amount: amount } } })
     (ok amount)
   )
