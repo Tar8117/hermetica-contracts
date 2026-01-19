@@ -39,7 +39,7 @@
     assets: (optional uint),                      ;; gross asset amount (includes fee) - calculated at funding time
     fee: (optional uint),                         ;; fee amount in asset
     fee-bps: uint,                                ;; fee basis points
-    ts: uint,                                     ;; timestamp in s claim after cooldown
+    ts: uint                                      ;; timestamp in s claim after cooldown
   }
 )
 
@@ -104,7 +104,7 @@
         assets: none,       ;; Will be calculated at funding time
         fee: none,          ;; Will be calculated at funding time
         fee-bps: exit-fee,
-        ts: ts,
+        ts: ts
       }
     )
     (print { action: "create-claim", user: contract-caller, data: { claim-id: new-claim-id, shares: shares, cooldown: cooldown, fee-bps: exit-fee, ts: ts } })
@@ -119,7 +119,7 @@
   )
     (asserts! (>= shares (get min-redeem state)) ERR_BELOW_MIN)
     (try! (contract-call? .blacklist check-is-not-soft contract-caller))
-    (try! (contract-call? .state check-redeem-auth is-express))
+    (try! (contract-call? .state check-redeem-auth shares is-express))
 
     (let ((claim-id (try! (create-claim shares (get exit-fee state) (get cooldown state)))))
       (print { action: "request-redeem", user: contract-caller, data: { claim-id: claim-id, shares: shares, is-express: is-express } })
@@ -191,7 +191,7 @@
 ;; @desc - Funds a single claim
 (define-public (fund-claim (claim-id uint))
   (let (
-    (is-manager (get manager (contract-call? .hq-hbtc get-keeper contract-caller)))
+    (is-manager (contract-call? .hq-hbtc get-manager contract-caller))
     (share-price (contract-call? .state get-share-price))
     (claim (try! (get-claim claim-id)))
     (result (try! (process-claim claim-id claim share-price (some is-manager))))
