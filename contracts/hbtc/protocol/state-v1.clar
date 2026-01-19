@@ -90,6 +90,7 @@
 (define-data-var redeem-enabled bool true)                         ;; redeems enabled/disabled flag
 (define-data-var trading-enabled bool true)                        ;; trading enabled/disabled flag
 (define-data-var express-enabled bool false)                       ;; express redeems enabled/disabled flag
+(define-data-var reward-enabled bool true)                        ;; reward enabled/disabled flag
 
 ;; Accounting Variables
 (define-data-var total-assets uint u0)                            ;; [8 decimals] - total assets in the reserve
@@ -340,6 +341,10 @@
   (var-get express-enabled)
 )
 
+(define-read-only (get-reward-enabled)
+  (var-get reward-enabled)
+)
+
 (define-read-only (get-asset (address principal))
   (let (
     (asset-entry (default-to 
@@ -450,7 +455,14 @@
     (try! (check-is-vault-enabled))
     (ok (asserts! (get-trading-enabled) ERR_TRADING_DISABLED))
   )
-) 
+)
+
+(define-read-only (check-is-reward-enabled)
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-protocol-enabled))
+    (ok (asserts! (var-get reward-enabled) ERR_REWARD_DISABLED))
+  )
+)
 
 (define-read-only (check-is-asset (address principal))
   (ok (asserts! (get active (get-asset address)) ERR_NOT_ASSET))
@@ -1207,6 +1219,22 @@
     (try! (contract-call? .hq-hbtc check-is-admin contract-caller))
     (print { action: "set-express-enabled", user: contract-caller, data: { old: (get-express-enabled), new: enabled } })
     (ok (var-set express-enabled enabled))
+  )
+)
+
+(define-public (set-reward-enabled (enabled bool))
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-owner contract-caller))
+    (print { action: "set-reward-enabled", user: contract-caller, data: { old: (get-reward-enabled), new: enabled } })
+    (ok (var-set reward-enabled enabled))
+  )
+)
+
+(define-public (disable-reward)
+  (begin
+    (try! (contract-call? .hq-hbtc check-is-guardian contract-caller))
+    (print { action: "disable-reward", user: contract-caller, data: { old: (get-reward-enabled), new: false } })
+    (ok (var-set reward-enabled false))
   )
 )
 
