@@ -9,6 +9,9 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - run: echo "Key length is ${#HIRO_API_KEY}"
+        env:
+          HIRO_API_KEY: ${{ secrets.HIRO_API_KEY }}
       - run: npm run clarigen
         env:
           HIRO_API_KEY: ${{ secrets.HIRO_API_KEY }}
