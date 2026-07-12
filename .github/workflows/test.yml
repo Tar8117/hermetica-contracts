@@ -1,0 +1,17 @@
+name: test
+on: workflow_dispatch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: npm run clarigen
+        env:
+          HIRO_API_KEY: ${{ secrets.HIRO_API_KEY }}
+      - run: npm test -- tests/hbtc/blacklist-evasion.test.ts
+        env:
+          HIRO_API_KEY: ${{ secrets.HIRO_API_KEY }}
