@@ -12,6 +12,10 @@ jobs:
       - run: echo "Key length is ${#HIRO_API_KEY}"
         env:
           HIRO_API_KEY: ${{ secrets.HIRO_API_KEY }}
+      - run: |
+          curl -s -o /dev/null -w "%{http_code}" -H "x-hiro-api-key: $HIRO_API_KEY" https://hiro.so
+        env:
+          HIRO_API_KEY: ${{ secrets.HIRO_API_KEY }}
       - run: npm run clarigen
         env:
           HIRO_API_KEY: ${{ secrets.HIRO_API_KEY }}
