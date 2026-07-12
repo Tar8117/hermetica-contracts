@@ -69,7 +69,7 @@ describe('Blacklist Evasion (soft-blacklist bypass via token transfer)', () => {
     txOk(blacklist.setBlacklister(deployer, true), deployer);
 
     // Sanity: full blacklist enforcement is OFF by default
-    expect(rov(blacklist.getFullBlacklistEnabled()).value).toBe(false);
+    expect(rov(blacklist.getFullBlacklistEnabled())).toBe(false);
 
     // --- user1 deposits normally, receives hBTC shares ---
     const depositResult = txOk(vault.deposit(depositAmount, null), user1);
@@ -81,8 +81,8 @@ describe('Blacklist Evasion (soft-blacklist bypass via token transfer)', () => {
       blacklist.addBlacklist([{ address: user1, full: false }]),
       deployer,
     );
-    expect(rov(blacklist.getSoftBlacklist(user1)).value).toBe(true);
-    expect(rov(blacklist.getFullBlacklist(user1)).value).toBe(false);
+    expect(rov(blacklist.getSoftBlacklist(user1))).toBe(true);
+    expect(rov(blacklist.getFullBlacklist(user1))).toBe(false);
 
     // --- Confirm the direct path IS blocked, as intended ---
     const directAttempt = txErr(vault.requestRedeem(shares, false), user1);
@@ -111,7 +111,7 @@ describe('Blacklist Evasion (soft-blacklist bypass via token transfer)', () => {
     // user1's originally-frozen economic value has been fully extracted
     // through user2, despite user1 remaining soft-blacklisted throughout.
     expect(finalRedeem.value as bigint).toBeGreaterThan(0n);
-    expect(rov(blacklist.getSoftBlacklist(user1)).value).toBe(true); // still "blacklisted"
+    expect(rov(blacklist.getSoftBlacklist(user1))).toBe(true); // still "blacklisted"
   });
 
   it('SCENARIO 2: bypass persists even with full-blacklist-enabled = true, for a soft-only address', () => {
@@ -121,7 +121,7 @@ describe('Blacklist Evasion (soft-blacklist bypass via token transfer)', () => {
 
     // Explicitly turn ON the enforcement flag that gates token-hbtc.transfer
     txOk(blacklist.setFullBlacklistEnabled(true), deployer);
-    expect(rov(blacklist.getFullBlacklistEnabled()).value).toBe(true);
+    expect(rov(blacklist.getFullBlacklistEnabled())).toBe(true);
 
     const depositResult = txOk(vault.deposit(depositAmount, null), user1);
     const shares = depositResult.value as bigint;
@@ -132,8 +132,8 @@ describe('Blacklist Evasion (soft-blacklist bypass via token transfer)', () => {
       blacklist.addBlacklist([{ address: user1, full: false }]),
       deployer,
     );
-    expect(rov(blacklist.getSoftBlacklist(user1)).value).toBe(true);
-    expect(rov(blacklist.getFullBlacklist(user1)).value).toBe(false);
+    expect(rov(blacklist.getSoftBlacklist(user1))).toBe(true);
+    expect(rov(blacklist.getFullBlacklist(user1))).toBe(false);
 
     // Direct path still correctly blocked
     txErr(vault.requestRedeem(shares, false), user1);
